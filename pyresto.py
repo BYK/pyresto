@@ -1,6 +1,6 @@
 import httplib
-import logging
 import json
+import logging
 from urllib import quote
 
 __all__ =['Model', 'Many']
@@ -30,34 +30,54 @@ class ModelBase(type):
 class Model(object):
   __metaclass__ = ModelBase
   _secure = True
+  _continuator = lambda x,y:None
+  _parser = staticmethod(json.loads)
 
   def __init__(self, **kwargs):
     self.__dict__.update(kwargs)
   
   @classmethod
-  def _rest_call(cls, *args, **kwargs):
+  def _rest_call(cls, **kwargs):
     conn = cls._connection
-    conn.request(*args, **kwargs)
+    conn.request(**kwargs)
     response = conn.getresponse()
     logging.debug('Response code: %s' % response.status)
     if response.status == 200:
-      data = response.read()
-      logging.debug(data)
-      return json.loads(data)
+      continuation_url = cls._continuator(response)
+      data = cls._parser(response.read())
+      if continuation_url:
+        logging.debug('Found more at: ' + continuation_url)
+        kwargs['url'] = continuation_url
+        data += cls._rest_call(**kwargs)
+      
+      return data
   
   @classmethod
   def get(cls, id):
     path = cls._path % dict(id=quote(id))
-    data = cls._rest_call('GET', path) or {}
+    data = cls._rest_call(method='GET', url=path) or {}
     instance = cls(**data)
     instance._id = id
     return instance
+
+
+class WrappedList(list):
+  def __init__(self, iterable, wrapper):
+    super(self.__class__, self).__init__(iterable)
+    self.__wrapper = wrapper
+  
+  def __getitem__(self, key):
+    return map(self.__wrapper, super(self.__class__, self).__getitem__(key)) \
+      if isinstance(key, slice) else self.__wrapper(super(self.__class__, self).__getitem__(key))
+
+  def __getslice__(self, i, j):
+    return map(self.__wrapper, super(self.__class__, self).__getslice__(i, j))
 
 class Many(object):
   def __init__(self, model, path = None):
     self.__model = model
     self.__path = path or model._path
-    self.__cache = None
+    self.__cache = {}
 
   def _with_owner(self, owner):
     def mapper(data):
@@ -77,15 +97,13 @@ class Many(object):
     return ids
   
   def __get__(self, instance, owner):
-    if self.__cache:
-      return self.__cache
-
-    model = self.__model
-    if not instance:
-      return model
-    
-    path = self.__path % self._get_id_dict(instance)
-    logging.debug('Call many path: %s' % path)
-    data = model._rest_call('GET', path) or []
-    self.__cache = map(self._with_owner(instance), data)
-    return self.__cache
+    if instance not in self.__cache:
+      model = self.__model
+      if not instance:
+        return model
+      
+      path = self.__path % self._get_id_dict(instance)
+      logging.debug('Call many path: %s' % path)
+      data = model._rest_call(method='GET', url=path) or []
+      self.__cache[instance] = WrappedList(data, self._with_owner(instance))
+    return self.__cache[instance]

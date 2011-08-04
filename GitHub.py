@@ -1,7 +1,18 @@
+import re
 from pyresto import *
 
 class GitHubModel(Model):
-  _host='api.github.com'
+  _host = 'api.github.com'
+  
+  _link_parser = re.compile(r'\<([^\>]+)\>;\srel="(\w+)"', re.I or re.U)
+  @classmethod
+  def _continuator(cls, response):
+    link_val = response.getheader('Link', None)
+    if not link_val: return
+    
+    links = dict(((cls._link_parser.match(link.strip()).group(2, 1)
+                     for link in link_val.split(','))))
+    return links.setdefault('next', None)
 
 
 class Comment(GitHubModel):
