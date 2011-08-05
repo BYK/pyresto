@@ -93,6 +93,11 @@ class WrappedList(list):
       self[i:j] = items
     return items
 
+  def __iter__(self):
+    iterator = super(self.__class__, self).__iter__()
+    return (self.__wrapper(item) for item in iterator)
+
+
 class Many(object):
   def __init__(self, model, path = None):
     self.__model = model
