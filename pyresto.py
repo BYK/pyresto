@@ -66,12 +66,26 @@ class WrappedList(list):
     super(self.__class__, self).__init__(iterable)
     self.__wrapper = wrapper
   
+  @staticmethod
+  def isdict(obj):
+    return isinstance(obj, dict)
+  
   def __getitem__(self, key):
-    return map(self.__wrapper, super(self.__class__, self).__getitem__(key)) \
-      if isinstance(key, slice) else self.__wrapper(super(self.__class__, self).__getitem__(key))
+    item = super(self.__class__, self).__getitem__(key)
+    should_wrap = self.isdict(item) or isinstance(key, slice) and any(map(self.isdict, item))
+    if should_wrap:
+      item = map(self.__wrapper, item) if isinstance(key, slice) \
+        else self.__wrapper(item)
+      self[key] = item
+    
+    return item
 
   def __getslice__(self, i, j):
-    return map(self.__wrapper, super(self.__class__, self).__getslice__(i, j))
+    items = super(self.__class__, self).__getslice__(i, j)
+    if any(map(self.isdict, items)):
+      items = map(self.__wrapper, items)
+      self[i:j] = items
+    return items
 
 class Many(object):
   def __init__(self, model, path = None):
@@ -81,10 +95,13 @@ class Many(object):
 
   def _with_owner(self, owner):
     def mapper(data):
-      instance = self.__model(**data)
-      instance._id = instance._get_id()
-      instance._owner = owner
-      return instance
+      if isinstance(data, dict):
+        instance = self.__model(**data)
+        instance._id = instance._get_id()
+        instance._owner = owner
+        return instance
+      elif isinstance(data, self.__model):
+        return data
     return mapper
   
   def _get_id_dict(self, owner):
