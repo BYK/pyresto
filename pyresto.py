@@ -59,11 +59,13 @@ class Model(object):
       return data
   
   @classmethod
-  def get(cls, id):
-    path = cls._path % dict(id=quote(id))
+  def get(cls, id, **kwargs):
+    kwargs.update(dict(id=quote(id)))
+    path = cls._path % kwargs
     data = cls._rest_call(method='GET', url=path) or {}
     instance = cls(**data)
     instance._id = id
+    instance._get_params = kwargs
     return instance
 
 
@@ -117,10 +119,8 @@ class Many(object):
   
   def _get_id_dict(self, owner):
     ids = {}
-    key = 'id'
     while owner:
-      key = '_' + key
-      ids[key] = owner._id
+      ids[owner.__class__.__name__.lower()] = owner._id
       owner = getattr(owner, '_owner', None)
     return ids
   
@@ -130,7 +130,11 @@ class Many(object):
       if not instance:
         return model
       
-      path = self.__path % self._get_id_dict(instance)
+      path_params = self._get_id_dict(instance)
+      if hasattr(instance, '_get_params'):
+        path_params.update(instance._get_params)
+      path = self.__path % path_params
+      
       logging.debug('Call many path: %s' % path)
       data = model._rest_call(method='GET', url=path) or []
       self.__cache[instance] = WrappedList(data, self._with_owner(instance))
