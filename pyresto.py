@@ -39,8 +39,14 @@ class Model(object):
   @classmethod
   def _rest_call(cls, **kwargs):
     conn = cls._connection
-    conn.request(**kwargs)
-    response = conn.getresponse()
+    
+    try:
+      conn.request(**kwargs)
+      response = conn.getresponse()
+    except: #should call conn.close() on any error to allow further calls to be made
+      conn.close()
+      return None
+    
     logging.debug('Response code: %s' % response.status)
     if response.status == 200:
       continuation_url = cls._continuator(response)
