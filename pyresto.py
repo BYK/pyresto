@@ -75,7 +75,7 @@ class WrappedList(list):
     self.__wrapper = wrapper
   
   @staticmethod
-  def isdict(obj):
+  def is_dict(obj):
     return isinstance(obj, dict)
   
   def __getitem__(self, key):
