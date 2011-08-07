@@ -58,5 +58,5 @@ class User(GitHubModel):
     return self.login
 
 #Late bindings due to circular references
-Repo.contributors = Many(User, '/repos/%(user)s/%(repo)/contributors')
+Repo.contributors = Many(User, '/repos/%(user)s/%(repo)s/contributors')
 User.follower_list = Many(User, '/users/%(user)s/followers')
