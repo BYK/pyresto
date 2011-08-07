@@ -16,11 +16,6 @@ class ModelBase(type):
     if not hasattr(new_class, '_path'):
       new_class._path = '/%s/%%(id)s' % quote(name.lower())
 
-    # Create function to loop over iterable validations
-    #for k, v in getattr(new_class.Meta, 'validations', {}).iteritems():
-    #  if isinstance(v, (list, tuple)):
-    #    new_class.Meta.validations[k] = ValidatorChain(*v)
-
     conn_class = httplib.HTTPSConnection if new_class._secure else httplib.HTTPConnection
     new_class._connection = conn_class(new_class._host)
     
@@ -75,7 +70,7 @@ class WrappedList(list):
     self.__wrapper = wrapper
   
   @staticmethod
-  def isdict(obj):
+  def is_dict(obj):
     return isinstance(obj, dict)
   
   def __getitem__(self, key):
