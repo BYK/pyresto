@@ -161,9 +161,10 @@ class Model(object):
 
   @classmethod
   def get(cls, id, **kwargs):
+    default = kwargs.pop('_default', dict())
     kwargs.update(dict(id=quote(id)))
     path = cls._path % kwargs
-    data = cls._rest_call(method='GET', url=path) or {}
+    data = cls._rest_call(method='GET', url=path) or default
 
     instance = cls(**data)
     instance._id = id
