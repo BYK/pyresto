@@ -120,7 +120,6 @@ class Foreign(Relation):
 
 class Model(object):
   __metaclass__ = ModelBase
-  _auto_fetch = False
   _secure = True
   _continuator = lambda x, y:None
   _parser = staticmethod(json.loads)
