@@ -67,7 +67,8 @@ class Many(Relation):
     def mapper(data):
       if isinstance(data, dict):
         instance = self.__model(**data)
-        instance._id = instance._get_id()
+        #set auto fetching true for man fields which usually contain a summary
+        instance._auto_fetch = True
         instance._owner = owner
         return instance
       elif isinstance(data, self.__model):
@@ -97,8 +98,9 @@ class Many(Relation):
 class Foreign(Relation):
   def __init__(self, model, key_extractor=None):
     self.__model = model
+    model_pk = model._pk
     self.__key_extractor = key_extractor if key_extractor else \
-      lambda x:dict(id=x.__dict__['__' + model.__name__.lower()])
+      lambda x:{model_pk: getattr(x, '__' + model.__name__.lower())[model_pk]}
 
     self.__cache = {}
 
@@ -109,22 +111,28 @@ class Foreign(Relation):
     if instance not in self.__cache:
       keys = instance._get_id_dict()
       keys.update(self.__key_extractor(instance))
-      self.__cache[instance] = self.__model.get(**keys)
+      logging.debug('Keys dict for foreign acccess: %s', str(keys))
+      pk = keys.pop(self.__model._pk)
+      self.__cache[instance] = self.__model.get(pk, **keys)
 
     return self.__cache[instance]
 
 
 class Model(object):
   __metaclass__ = ModelBase
+  _auto_fetch = False
   _secure = True
   _continuator = lambda x, y:None
   _parser = staticmethod(json.loads)
+  _fetched = False
+  _get_params = dict()
 
   def __init__(self, **kwargs):
     self.__dict__.update(kwargs)
+
     cls = self.__class__
     overlaps = set(cls.__dict__) & set(kwargs)
-    logging.debug('Found overlaps: ' + str(overlaps))
+    #logging.debug('Found overlaps: %s', str(overlaps))
     for item in overlaps:
       if issubclass(getattr(cls, item), Model):
         self.__dict__['__' + item] = self.__dict__.pop(item)
@@ -133,7 +141,7 @@ class Model(object):
     ids = {}
     owner = self
     while owner:
-      ids[owner.__class__.__name__.lower()] = owner._id
+      ids[owner.__class__.__name__.lower()] = getattr(owner, owner._pk)
       owner = getattr(owner, '_owner', None)
     return ids
 
@@ -148,26 +156,41 @@ class Model(object):
       conn.close()
       return None
 
-    logging.debug('Response code: %s' % response.status)
+    logging.debug('Response code: %s', response.status)
     if response.status == 200:
       continuation_url = cls._continuator(response)
       data = cls._parser(response.read())
       if continuation_url:
-        logging.debug('Found more at: ' + continuation_url)
+        logging.debug('Found more at: %s', continuation_url)
         kwargs['url'] = continuation_url
         data += cls._rest_call(**kwargs)
 
       return data
 
+  def __fetch(self):
+    path = self._path % self.__dict__
+    data = self._rest_call(method='GET', url=path)
+    if data:
+      self.__dict__.update(data)
+      self._fetched = True
+
+  def __getattr__(self, name):
+    if self._fetched:
+      raise AttributeError
+    self.__fetch()
+    return getattr(self, name)
+
   @classmethod
   def get(cls, id, **kwargs):
-    default = kwargs.pop('_default', dict())
-    kwargs.update(dict(id=quote(id)))
+    kwargs[cls._pk] = id
     path = cls._path % kwargs
-    data = cls._rest_call(method='GET', url=path) or default
+    data = cls._rest_call(method='GET', url=path)
+    
+    if not data:
+      return
 
     instance = cls(**data)
-    instance._id = id
     instance._get_params = kwargs
+    instance._fetched = True
     return instance
 

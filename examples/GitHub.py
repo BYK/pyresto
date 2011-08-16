@@ -17,45 +17,36 @@ class GitHubModel(Model):
 
 class Comment(GitHubModel):
   _path = '/repos/%(user)s/%(repo)s/comments/%(id)s'
-
-  def _get_id(self):
-    return self.id
+  _pk = 'id'
 
 
 class Commit(GitHubModel):
-  _path = '/repos/%(user)s/%(repo)s/commits/%(id)s'
+  _path = '/repos/%(user)s/%(repo)s/commits/%(sha)s'
+  _pk = 'sha'
   comments = Many(Comment, '/repos/%(user)s/%(repo)s/commits/%(commit)s/comments')
-
-  def _get_id(self):
-    return self.sha
 
 
 class Branch(GitHubModel):
   _path = None
-  commit = Foreign(Commit, key_extractor=lambda x:dict(id=x.__dict__['__commit']['sha']))
-
-  def _get_id(self):
-    return self.name
+  _pk = 'name'
+  commit = Foreign(Commit)
 Tag = Branch
 
 
 class Repo(GitHubModel):
-  _path = '/repos/%(user)s/%(id)s'
+  _path = '/repos/%(user)s/%(name)s'
+  _pk = 'name'
   commits = Many(Commit, '/repos/%(user)s/%(repo)s/commits')
   comments = Many(Comment, '/repos/%(user)s/%(repo)s/comments')
   tags = Many(Tag, '/repos/%(user)s/%(repo)s/tags')
   branches = Many(Branch, '/repos/%(user)s/%(repo)s/branches')
 
-  def _get_id(self):
-    return self.name
-
 
 class User(GitHubModel):
-  _path = '/users/%(id)s'
+  _path = '/users/%(login)s'
+  _pk = 'login'
   repos = Many(Repo, '/users/%(user)s/repos?per_page=100')
 
-  def _get_id(self):
-    return self.login
 
 #Late bindings due to circular references
 Repo.contributors = Many(User, '/repos/%(user)s/%(repo)s/contributors')
