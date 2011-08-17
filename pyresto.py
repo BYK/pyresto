@@ -1,3 +1,5 @@
+# coding: utf-8
+
 import httplib
 import json
 import logging
@@ -158,7 +160,9 @@ class Model(object):
     logging.debug('Response code: %s', response.status)
     if response.status == 200:
       continuation_url = cls._continuator(response)
-      data = cls._parser(response.read())
+      encoding = response.getheader('content-type', '').split('charset=')
+      encoding = encoding[1] if len(encoding) > 1 else 'utf-8'
+      data = cls._parser(unicode(response.read(), encoding, 'replace'))
       if continuation_url:
         logging.debug('Found more at: %s', continuation_url)
         kwargs['url'] = continuation_url
