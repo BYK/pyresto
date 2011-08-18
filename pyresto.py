@@ -5,7 +5,7 @@ import json
 import logging
 from urllib import quote
 
-__all__ = ['Model', 'Many', 'Foreign']
+__all__ = ('Model', 'Many', 'Foreign')
 
 logging.getLogger().setLevel(logging.DEBUG)
 
@@ -153,7 +153,8 @@ class Model(object):
     try:
       conn.request(**kwargs)
       response = conn.getresponse()
-    except: #should call conn.close() on any error to allow further calls to be made
+    except Exception as e: #should call conn.close() on any error to allow further calls to be made
+      logging.debug('httplib error: %s', e.__class__.__name__)
       conn.close()
       return None
 
