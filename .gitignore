@@ -1,2 +1,6 @@
+*~
 *.pyc
+.project
+.pydevproject
+.settings/
 .idea/
