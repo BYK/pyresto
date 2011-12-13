@@ -35,7 +35,7 @@ class WrappedList(list):
 
     def __getitem__(self, key):
         item = super(self.__class__, self).__getitem__(key)
-        should_wrap = self.isinstance(item, dict) or isinstance(key, slice)\
+        should_wrap = isinstance(item, dict) or isinstance(key, slice)\
                       and any(isinstance(it, dict) for it in item)
 
         if should_wrap:
