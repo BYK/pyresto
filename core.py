@@ -57,14 +57,42 @@ class WrappedList(list):
         return (self.__wrapper(item) for item in iterator)
 
 
+class LazyList(object):
+    __length = None
+
+    def __init__(self, data, wrapper, fetcher):
+        self.__data = data
+        self.__length = len(data)
+        self.__wrapper = wrapper
+        self.__fetcher = fetcher
+
+    def __iter__(self):
+        cursor = 0
+        while cursor < self.__length or self.__fetcher:
+            if cursor >= self.__length:
+                new_data, new_fetcher = self.__fetcher()
+                self.__fetcher = new_fetcher
+                self.__data.extend(new_data)
+                self.__length = len(self.__data)
+
+            item = self.__data[cursor]
+            if isinstance(item, dict):  # not wrapped
+                item = self.__wrapper(item)
+                self.__data[cursor] = item
+
+            cursor += 1
+            yield item
+
+
 class Relation(object):
     pass
 
 
 class Many(Relation):
-    def __init__(self, model, path=None):
+    def __init__(self, model, path=None, lazy=False):
         self.__model = model
         self.__path = path or model._path
+        self.__lazy = lazy
         self.__cache = {}
 
     def _with_owner(self, owner):
@@ -79,6 +107,18 @@ class Many(Relation):
             elif isinstance(data, self.__model):
                 return data
         return mapper
+
+    def __make_fetcher(self, url):
+        def fetcher():
+            data, new_url = self.__model._rest_call(method='GET',
+                                                    url=url,
+                                                    fetch_all=False)
+            if not data:
+                data = []
+
+            new_fetcher = self.__make_fetcher(new_url) if new_url else None
+            return data, new_fetcher
+        return fetcher
 
     def __get__(self, instance, owner):
         if not instance:
@@ -95,9 +135,21 @@ class Many(Relation):
             path = self.__path % path_params
 
             logging.debug('Call many path: %s' % path)
-            data = model._rest_call(method='GET', url=path) or []
-            self.__cache[instance] = WrappedList(data,
-                                                 self._with_owner(instance))
+            data, next_url = model._rest_call(method='GET',
+                                              url=path,
+                                              fetch_all=(not self.__lazy))
+            if not data:
+                data = []
+
+            if self.__lazy:
+                self.__cache[instance] = LazyList(data,
+                                                  self._with_owner(instance),
+                                                  self.__make_fetcher(next_url)
+                                                  )
+            else:
+                self.__cache[instance] = WrappedList(data,
+                                                     self._with_owner(instance)
+                                                     )
         return self.__cache[instance]
 
 
@@ -143,6 +195,11 @@ class Model(object):
             if issubclass(getattr(cls, item), Model):
                 self.__dict__['__' + item] = self.__dict__.pop(item)
 
+        try:
+            self._current_path = self._path % self.__dict__
+        except KeyError:
+            self._current_path = None
+
     def _get_id_dict(self):
         ids = {}
         owner = self
@@ -152,9 +209,8 @@ class Model(object):
         return ids
 
     @classmethod
-    def _rest_call(cls, **kwargs):
+    def _rest_call(cls, fetch_all=True, **kwargs):
         conn = cls._connection
-
         try:
             conn.request(**kwargs)
             response = conn.getresponse()
@@ -163,7 +219,7 @@ class Model(object):
             # to allow further calls to be made
             logging.debug('httplib error: %s', e.__class__.__name__)
             conn.close()
-            return None
+            return None, None
 
         logging.debug('Response code: %s', response.status)
         if response.status == 200:
@@ -173,14 +229,22 @@ class Model(object):
             data = cls._parser(unicode(response.read(), encoding, 'replace'))
             if continuation_url:
                 logging.debug('Found more at: %s', continuation_url)
-                kwargs['url'] = continuation_url
-                data += cls._rest_call(**kwargs)
+                if fetch_all:
+                    kwargs['url'] = continuation_url
+                    data += cls._rest_call(**kwargs)[0]
+                else:
+                    return data, continuation_url
 
-            return data
+            return data, None
 
     def __fetch(self):
-        path = self._path % self.__dict__
-        data = self._rest_call(method='GET', url=path)
+        if not self._current_path:
+            return
+
+        data, next_url = self._rest_call(method='GET', url=self._current_path)
+        if next_url:
+            self._current_path = next_url
+
         if data:
             self.__dict__.update(data)
             self._fetched = True
@@ -195,7 +259,7 @@ class Model(object):
     def get(cls, id, **kwargs):
         kwargs[cls._pk] = id
         path = cls._path % kwargs
-        data = cls._rest_call(method='GET', url=path)
+        data = cls._rest_call(method='GET', url=path)[0]
 
         if not data:
             return

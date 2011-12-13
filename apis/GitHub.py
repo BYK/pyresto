@@ -41,7 +41,8 @@ Tag = Branch
 class Repo(GitHubModel):
     _path = '/repos/%(user)s/%(name)s'
     _pk = 'name'
-    commits = Many(Commit, '/repos/%(user)s/%(repo)s/commits?per_page=100')
+    commits = Many(Commit, '/repos/%(user)s/%(repo)s/commits?per_page=100',
+                   lazy=True)
     comments = Many(Comment, '/repos/%(user)s/%(repo)s/comments?per_page=100')
     tags = Many(Tag, '/repos/%(user)s/%(repo)s/tags?per_page=100')
     branches = Many(Branch, '/repos/%(user)s/%(repo)s/branches?per_page=100')
