@@ -33,14 +33,10 @@ class WrappedList(list):
         super(self.__class__, self).__init__(iterable)
         self.__wrapper = wrapper
 
-    @staticmethod
-    def is_dict(obj):
-        return isinstance(obj, dict)
-
     def __getitem__(self, key):
         item = super(self.__class__, self).__getitem__(key)
-        should_wrap = self.is_dict(item) or isinstance(key, slice)\
-                      and any(map(self.is_dict, item))
+        should_wrap = self.isinstance(item, dict) or isinstance(key, slice)\
+                      and any(isinstance(it, dict) for it in item)
 
         if should_wrap:
             item = map(self.__wrapper, item) if isinstance(key, slice) \
@@ -51,7 +47,7 @@ class WrappedList(list):
 
     def __getslice__(self, i, j):
         items = super(self.__class__, self).__getslice__(i, j)
-        if any(map(self.is_dict, items)):
+        if any(isinstance(it, dict) for it in items):
             items = map(self.__wrapper, items)
             self[i:j] = items
         return items
