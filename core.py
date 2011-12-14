@@ -9,6 +9,9 @@ __all__ = ('Model', 'Many', 'Foreign')
 
 logging.getLogger().setLevel(logging.DEBUG)
 
+class Error(Exception):
+    pass
+
 
 class ModelBase(type):
     def __new__(cls, name, bases, attrs):
@@ -217,11 +220,9 @@ class Model(object):
         except Exception as e:
             # should call conn.close() on any error
             # to allow further calls to be made
-            logging.debug('httplib error: %s', e.__class__.__name__)
             conn.close()
-            return None, None
+            raise e
 
-        logging.debug('Response code: %s', response.status)
         if response.status == 200:
             continuation_url = cls._continuator(response)
             encoding = response.getheader('content-type', '').split('charset=')
@@ -234,8 +235,11 @@ class Model(object):
                     data += cls._rest_call(**kwargs)[0]
                 else:
                     return data, continuation_url
-
             return data, None
+        else:
+            conn.close()
+            raise Error("Server response not OK. Response code: %d" %
+                         response.status)
 
     def __fetch(self):
         if not self._current_path:
