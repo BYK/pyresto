@@ -60,7 +60,7 @@ class Repo(GitHubModel):
 class User(GitHubModel):
     _path = '/users/%(login)s'
     _pk = 'login'
-    repos = Many(Repo, '/users/%(user)s/repos?per_page=100')
+    repos = Many(Repo, '/users/%(user)s/repos?type=all&per_page=100')
 
 
 #Late bindings due to circular references
