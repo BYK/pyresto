@@ -19,13 +19,15 @@ class ModelBase(type):
         new_class = type.__new__(cls, name, bases, attrs)
 
         if not hasattr(new_class, '_path'):
-            new_class._path = '/{}/{{id}}'.format(quote(name.lower()))
+            new_class._path = u'/{}/{{id}}'.format(quote(name.lower()))
+        else:
+            new_class._path = unicode(new_class._path)
 
         if new_class._secure:
             conn_class = httplib.HTTPSConnection
         else:
             conn_class = httplib.HTTPConnection
-        new_class._get_connection = staticmethod(lambda: conn_class(new_class._host))
+        new_class._get_connection = classmethod(lambda c: conn_class(c._host))
 
         return new_class
 
@@ -79,7 +81,7 @@ class Relation(object):
 class Many(Relation):
     def __init__(self, model, path=None, lazy=False):
         self.__model = model
-        self.__path = path or model._path
+        self.__path = unicode(path) or model._path
         self.__lazy = lazy
         self.__cache = {}
 
