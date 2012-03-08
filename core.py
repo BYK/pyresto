@@ -60,6 +60,9 @@ class WrappedList(list):
         iterator = super(self.__class__, self).__iter__()
         return (self.__wrapper(item) for item in iterator)
 
+    def __contains__(self, item):
+        return item in iter(self)
+
 
 class LazyList(object):
     def __init__(self, wrapper, fetcher):
