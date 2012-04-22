@@ -1,0 +1,1 @@
+Search.setIndex({objects:{"":{pyresto:[1,0,0]}},terms:{"function":0,look:0,specif:0,method:0,inform:0,api:[0,1],thi:0,part:0,you:0,document:0,"class":0,pyresto:0},objtypes:{"0":"py:module"},titles:["Pyresto","API"],objnames:{"0":"Python module"},filenames:["index","api"]})
