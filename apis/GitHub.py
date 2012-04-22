@@ -1,12 +1,12 @@
 # coding: utf-8
 
 import re
-from ..core import *
+from ..core import Foreign, Many, Model
 
 
 class GitHubModel(Model):
     _host = 'api.github.com'
-    _link_parser = re.compile(r'\<([^\>]+)\>;\srel="(\w+)"', re.I or re.U)
+    _link_parser = re.compile(r'\<([^\>]+)\>;\srel="(\w+)"', re.I | re.U)
 
     @classmethod
     def _continuator(cls, response):
@@ -18,14 +18,17 @@ class GitHubModel(Model):
         for link in link_val.split(','))))
         return links.setdefault('next', None)
 
+    def __eq__(self, other):
+        return  isinstance(other, self.__class__) and self.url == other.url
+
 
 class Comment(GitHubModel):
-    _path = '/repos/{user}/{repo}/comments/{id}'
+    _path = '{repo.url}/comments/{id}'
     _pk = 'id'
 
 
 class Commit(GitHubModel):
-    _path = '/repos/{user}/{repo}/commits/{sha}'
+    _path = '{repo.url}/commits/{sha}'
     _pk = 'sha'
     comments = Many(Comment, '{commit.url}/comments?per_page=100')
 
@@ -45,7 +48,7 @@ class Tag(GitHubModel):
 
 
 class Repo(GitHubModel):
-    _path = '/repos/{user}/{name}'
+    _path = '{user.url}/{name}'
     _pk = 'name'
     commits = Many(Commit, '{repo.url}/commits?per_page=100', lazy=True)
     comments = Many(Comment, '{repo.url}/comments?per_page=100')
@@ -59,6 +62,9 @@ class User(GitHubModel):
     repos = Many(Repo, '{user.url}/repos?type=all&per_page=100')
 
 
-#Late bindings due to circular references
+# Late bindings due to circular references
 Repo.contributors = Many(User, '{repo.url}/contributors?per_page=100')
+Repo.owner = Foreign(User, 'owner')
+Repo.watcher_list = Many(User, '{repo.url}/watchers?per_page=100')
 User.follower_list = Many(User, '{user.url}/followers?per_page=100')
+User.watched = Many(Repo, '{user.url}/watched?per_page=100')

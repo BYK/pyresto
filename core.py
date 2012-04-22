@@ -19,13 +19,15 @@ class ModelBase(type):
         new_class = type.__new__(cls, name, bases, attrs)
 
         if not hasattr(new_class, '_path'):
-            new_class._path = '/{}/{{id}}'.format(quote(name.lower()))
+            new_class._path = u'/{}/{{id}}'.format(quote(name.lower()))
+        else:
+            new_class._path = unicode(new_class._path)
 
         if new_class._secure:
             conn_class = httplib.HTTPSConnection
         else:
             conn_class = httplib.HTTPConnection
-        new_class._connection = conn_class(new_class._host)
+        new_class._get_connection = classmethod(lambda c: conn_class(c._host))
 
         return new_class
 
@@ -37,12 +39,12 @@ class WrappedList(list):
 
     def __getitem__(self, key):
         item = super(self.__class__, self).__getitem__(key)
-        should_wrap = isinstance(item, dict) or isinstance(key, slice)\
-        and any(isinstance(it, dict) for it in item)
+        should_wrap = (isinstance(item, dict) or isinstance(key, slice) and
+                       any(isinstance(it, dict) for it in item))
 
         if should_wrap:
-            item = map(self.__wrapper, item) if isinstance(key, slice)\
-            else self.__wrapper(item)
+            item = (map(self.__wrapper, item)
+                    if isinstance(key, slice) else self.__wrapper(item))
             self[key] = item
 
         return item
@@ -58,54 +60,21 @@ class WrappedList(list):
         iterator = super(self.__class__, self).__iter__()
         return (self.__wrapper(item) for item in iterator)
 
+    def __contains__(self, item):
+        return item in iter(self)
+
 
 class LazyList(object):
-    __length = None
-
-    def __init__(self, data, wrapper, fetcher):
-        self.__data = data
-        self.__length = len(data)
+    def __init__(self, wrapper, fetcher):
         self.__wrapper = wrapper
         self.__fetcher = fetcher
 
     def __iter__(self):
-        cursor = 0
-        while cursor < self.__length or self.__fetcher:
-            if cursor >= self.__length:
-                new_data, new_fetcher = self.__fetcher()
-                self.__fetcher = new_fetcher
-                if not new_data:
-                    break
-                self.__data.extend(new_data)
-                self.__length = len(self.__data)
-
-            item = self.__data[cursor]
-            if isinstance(item, dict):  # not wrapped
-                item = self.__wrapper(item)
-                self.__data[cursor] = item
-
-            cursor += 1
-            yield item
-
-    def iter_while(self, checker):
-        for item in self:
-            if checker(item):
-                yield item
-            else:
-                break
-
-    def collect_while(self, checker):
-        return [item for item in self.iter_while(checker)]
-
-    def collect_upto(self, checker, limit=10):
-        results = []
-        for item in self:
-            if limit < 1:
-                break
-            elif checker(item):
-                results.append(item)
-                limit -= 1
-        return results
+        fetcher = self.__fetcher
+        while fetcher:
+            data, fetcher = fetcher()
+            for item in data:
+                yield self.__wrapper(item)
 
 
 class Relation(object):
@@ -115,7 +84,7 @@ class Relation(object):
 class Many(Relation):
     def __init__(self, model, path=None, lazy=False):
         self.__model = model
-        self.__path = path or model._path
+        self.__path = unicode(path) or model._path
         self.__lazy = lazy
         self.__cache = {}
 
@@ -126,10 +95,11 @@ class Many(Relation):
                 # set auto fetching true for man fields
                 # which usually contain a summary
                 instance._auto_fetch = True
-                instance._owner = owner
+                instance._pyresto_owner = owner
                 return instance
             elif isinstance(data, self.__model):
                 return data
+
         return mapper
 
     def __make_fetcher(self, url):
@@ -142,6 +112,7 @@ class Many(Relation):
 
             new_fetcher = self.__make_fetcher(new_url) if new_url else None
             return data, new_fetcher
+
         return fetcher
 
     def __get__(self, instance, owner):
@@ -158,31 +129,24 @@ class Many(Relation):
                 path_params.update(instance._get_params)
             path = self.__path.format(**path_params)
 
-            data, next_url = model._rest_call(method='GET',
-                                              url=path,
-                                              fetch_all=(not self.__lazy))
-            if not data:
-                data = []
-
             if self.__lazy:
-                self.__cache[instance] = LazyList(data,
-                                                  self._with_owner(instance),
-                                                  self.__make_fetcher(next_url)
-                )
+                self.__cache[instance] = LazyList(self._with_owner(instance),
+                                                  self.__make_fetcher(path))
             else:
-                self.__cache[instance] = WrappedList(data,
-                                                     self._with_owner(instance)
-                )
+                data, next_url = model._rest_call(method='GET', url=path)
+                self.__cache[instance] =\
+                            WrappedList(data or [], self._with_owner(instance))
         return self.__cache[instance]
 
 
 class Foreign(Relation):
-    def __init__(self, model, key_extractor=None):
+    def __init__(self, model, key_property=None, key_extractor=None):
         self.__model = model
-        model_name = model.__name__.lower()
+        if not key_property:
+            key_property = model.__name__.lower()
         model_pk = model._pk
-        self.__key_extractor = key_extractor if key_extractor else\
-        lambda x: {model_pk: getattr(x, '__' + model_name)[model_pk]}
+        self.__key_extractor = (key_extractor if key_extractor else
+            lambda x: {model_pk: getattr(x, '__' + key_property)[model_pk]})
 
         self.__cache = {}
 
@@ -218,7 +182,8 @@ class Model(object):
                 self.__dict__['__' + item] = self.__dict__.pop(item)
 
         try:
-            self._current_path = self._path and (self._path.format(**self.__dict__))
+            self._current_path = self._path and (
+            self._path.format(**self.__dict__))
         except KeyError:
             self._current_path = None
 
@@ -231,12 +196,12 @@ class Model(object):
         owner = self
         while owner:
             ids[owner.__class__.__name__.lower()] = owner
-            owner = getattr(owner, '_owner', None)
+            owner = getattr(owner, '_pyresto_owner', None)
         return ids
 
     @classmethod
     def _rest_call(cls, fetch_all=True, **kwargs):
-        conn = cls._connection
+        conn = cls._get_connection()
         response = None
         try:
             conn.request(**kwargs)
@@ -267,6 +232,7 @@ class Model(object):
             return data, None
         else:
             conn.close()
+            logging.error("URL returned HTTP %d: %s", response.status, kwargs)
             raise Error("Server response not OK. Response code: %d" %
                         response.status)
 
@@ -290,8 +256,8 @@ class Model(object):
         return getattr(self, name)
 
     @classmethod
-    def get(cls, id, **kwargs):
-        kwargs[cls._pk] = id
+    def get(cls, model_id, **kwargs):
+        kwargs[cls._pk] = model_id
         path = cls._path.format(**kwargs)
         data = cls._rest_call(method='GET', url=path)[0]
 
