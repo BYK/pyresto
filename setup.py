@@ -21,12 +21,12 @@ def get_file_contents(file_path):
 setup(
     name=pyresto.__title__,
     version=pyresto.__version__,
-    description='A general REST based ORM. ',
+    description='A general REST based ORM.',
     long_description=get_file_contents('README.rst'),
     author='Burak Yiğit Kaya',
     author_email='ben@byk.im',
-    maintainer='Berker Peksag',
-    maintainer_email='berker.peksag@gmail.com',
+    #maintainer='Berker Peksag',
+    #maintainer_email='berker.peksag@gmail.com',
     url='http://pyresto.readthedocs.org',
     packages=[
         'pyresto',
