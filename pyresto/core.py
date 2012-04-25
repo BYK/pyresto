@@ -212,7 +212,7 @@ class Model(object):
             conn.close()
             if isinstance(e, httplib.BadStatusLine):
                 if not response:  # retry
-                    return cls._restcall(fetch_all, **kwargs)
+                    return cls._rest_call(fetch_all, **kwargs)
             else:
                 raise e
 
