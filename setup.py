@@ -25,8 +25,6 @@ setup(
     long_description=get_file_contents('README.rst'),
     author='Burak Yiğit Kaya',
     author_email='ben@byk.im',
-    #maintainer='Berker Peksag',
-    #maintainer_email='berker.peksag@gmail.com',
     url='https://github.com/BYK/pyresto',
     packages=[
         'pyresto',
