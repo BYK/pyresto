@@ -27,7 +27,7 @@ setup(
     author_email='ben@byk.im',
     #maintainer='Berker Peksag',
     #maintainer_email='berker.peksag@gmail.com',
-    url='http://pyresto.readthedocs.org',
+    url='https://github.com/BYK/pyresto',
     packages=[
         'pyresto',
         'pyresto.apis'
