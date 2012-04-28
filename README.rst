@@ -1,6 +1,8 @@
 Pyresto
 =======
 
+![Build status](https://secure.travis-ci.org/berkerpeksag/pyresto.png)
+
 ::
 
     import pyresto.apis.GitHub as GitHub
