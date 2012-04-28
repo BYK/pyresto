@@ -1,7 +1,9 @@
 Pyresto
 =======
 
-![Build status](https://secure.travis-ci.org/berkerpeksag/pyresto.png)
+.. |travis| image:: https://secure.travis-ci.org/berkerpeksag/pyresto.png
+
+|travis|_
 
 ::
 
