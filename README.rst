@@ -1,6 +1,7 @@
 Pyresto
 =======
 
+.. _travis: http://travis-ci.org/berkerpeksag/pyresto
 .. |travis| image:: https://secure.travis-ci.org/berkerpeksag/pyresto.png
 
 |travis|_
