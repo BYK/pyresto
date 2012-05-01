@@ -1,7 +1,16 @@
 Pyresto
 =======
 
+Getting Started
+---------------
 
+Tutorial
+--------
+
+.. toctree::
+   :maxdepth: 2
+
+   tutorial
 
 API Documentation
 -----------------
