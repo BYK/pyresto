@@ -1,4 +1,4 @@
-# coding: utf-8
+new_class._path# coding: utf-8
 
 import httplib
 import json
@@ -19,7 +19,7 @@ class ModelBase(type):
         new_class = type.__new__(cls, name, bases, attrs)
 
         if not hasattr(new_class, '_path'):
-            new_class._path = u'/{}/{{id}}'.format(quote(name.lower()))
+            new_class._path = u'/{0}/{{1:id}}'.format(quote(name.lower()))
         else:
             new_class._path = unicode(new_class._path)
 
