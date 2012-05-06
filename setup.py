@@ -22,7 +22,7 @@ setup(
     name=pyresto.__title__,
     version=pyresto.__version__,
     description='A general REST based ORM.',
-    long_description=get_file_contents('README.rst'),
+    long_description=get_file_contents('README.md'),
     author='Burak Yiğit Kaya',
     author_email='ben@byk.im',
     url='https://github.com/BYK/pyresto',
