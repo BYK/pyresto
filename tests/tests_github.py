@@ -11,7 +11,8 @@ class GitHubTestSuite(unittest.TestCase):
     def test_user_repos(self):
         """Expects pyresto.apis.GitHub.User."""
         user = GitHub.User.get('berkerpeksag')
-        self.assertIsInstance(user, pyresto.apis.GitHub.User)
+        # assertIsInstance added in 2.7.
+        self.assertTrue(isinstance(user, pyresto.apis.GitHub.User))
 
 if __name__ == '__main__':
     unittest.main()
