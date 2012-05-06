@@ -1,4 +1,4 @@
-new_class._path# coding: utf-8
+# coding: utf-8
 
 import httplib
 import json
