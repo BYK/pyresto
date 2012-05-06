@@ -6,3 +6,6 @@ init:
 
 test:
 	nosetests -v tests/*
+
+docs:
+	cd docs; make html
