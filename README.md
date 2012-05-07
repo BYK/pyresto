@@ -19,6 +19,11 @@ To install Pyresto, simply:
 pip install pyresto
 ```
 
+Documentation
+-------------
+
+Documentation hosted on [Read The Docs](http://pyresto.readthedocs.org/).
+
 License
 -------
 
