@@ -89,7 +89,7 @@ class Many(Relation):
         self.__model = model
         self.__path = unicode(path) or model._path
         self.__lazy = lazy
-        self.__cache = {}
+        self.__cache = dict()
 
     def _with_owner(self, owner):
         def mapper(data):
@@ -149,9 +149,9 @@ class Foreign(Relation):
             key_property = model.__name__.lower()
         model_pk = model._pk
         self.__key_extractor = (key_extractor if key_extractor else
-            lambda x: {model_pk: getattr(x, '__' + key_property)[model_pk]})
+            lambda x: dict(model_pk=getattr(x, '__' + key_property)[model_pk]))
 
-        self.__cache = {}
+        self.__cache = dict()
 
     def __get__(self, instance, owner):
         if not instance:
@@ -195,7 +195,7 @@ class Model(object):
         return getattr(self, self._pk)
 
     def _get_id_dict(self):
-        ids = {}
+        ids = dict()
         owner = self
         while owner:
             ids[owner.__class__.__name__.lower()] = owner
