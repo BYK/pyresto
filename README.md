@@ -7,7 +7,7 @@ Pyresto
 import pyresto.apis.GitHub as GitHub
 
 user = GitHub.User.get('berkerpeksag')
-sum(r.watchers for r in user.repos)  # 332
+print 'Watchers: {0:d}'.format(sum(r.watchers for r in user.repos))
 ```
 
 Installation
