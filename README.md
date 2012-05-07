@@ -22,7 +22,7 @@ pip install pyresto
 Documentation
 -------------
 
-Documentation hosted on [Read The Docs](http://pyresto.readthedocs.org/).
+Documentation hosted on [Read the Docs](http://pyresto.readthedocs.org/).
 
 License
 -------
