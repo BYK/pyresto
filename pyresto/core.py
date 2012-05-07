@@ -1,7 +1,10 @@
 # coding: utf-8
 
 import httplib
-import json
+try:
+    import json
+except ImportError:
+    import simplejson as json
 import logging
 from urllib import quote
 
