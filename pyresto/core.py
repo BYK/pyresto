@@ -216,7 +216,7 @@ class Model(object):
             else:
                 raise e
 
-        if response.status >= 200 and response.status < 300:
+        if 200 <= response.status < 300:
             continuation_url = cls._continuator(response)
             encoding = response.getheader('content-type', '').split('charset=')
             encoding = encoding[1] if len(encoding) > 1 else 'utf-8'
