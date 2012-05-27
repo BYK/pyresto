@@ -69,9 +69,9 @@ class WrappedList(list):
                        any(isinstance(it, dict) for it in item))
 
         if should_wrap:
-            item = (map(self.__wrapper, item)
+            item = ([self.__wrapper(_) for _ in item]
                     if isinstance(key, slice) else self.__wrapper(item))
-            self[key] = item
+            self[key] = item  # cache wrapped item/slice
 
         return item
 
@@ -79,8 +79,8 @@ class WrappedList(list):
         # We need this implementation for backwards compatibility.
         items = super(self.__class__, self).__getslice__(i, j)
         if any(isinstance(it, dict) for it in items):
-            items = map(self.__wrapper, items)
-            self[i:j] = items
+            items = [self.__wrapper(_) for _ in items]
+            self[i:j] = items  # cache wrapped slice
         return items
 
     def __iter__(self):
