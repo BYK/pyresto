@@ -56,6 +56,7 @@ class WrappedList(list):
     Wrapped list implementation to dynamically create models as someone tries
     to access an item or a slice in the list. Returns a generator instead, when
     someone tries to iterate over the whole list.
+
     """
     def __init__(self, iterable, wrapper):
         super(self.__class__, self).__init__(iterable)
@@ -101,6 +102,7 @@ class LazyList(object):
     such as commits in a large repository. This is essentially a chained and
     structured generator. No caching and memoization at all since the intended
     usage is for small number of iterations.
+
     """
     def __init__(self, wrapper, fetcher):
         self.__wrapper = wrapper
