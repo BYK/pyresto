@@ -1,5 +1,13 @@
 # coding: utf-8
 
+"""
+pyresto.core
+~~~~~~~~~~~~
+
+This module contains all core pyresto classes such as Error, Model and relation
+classes.
+"""
+
 import httplib
 try:
     import json
@@ -12,18 +20,26 @@ __all__ = ('Error', 'Model', 'Many', 'Foreign')
 
 
 class Error(Exception):
+    """Base error class for pyresto."""
     pass
 
 
 class ModelBase(type):
+    """
+    Meta class for Model type. This class automagically creates the necessary
+    _path class variable if it is not already defined. The default path pattern
+    is `/ModelName/{id}`. It also generates the connection factory for the new
+    model based on the _secure class variable defined in the model.
+
+    """
     def __new__(mcs, name, bases, attrs):
-        if name == 'Model':
+        if name == 'Model':  # prevent infinite recursion
             return super(ModelBase, mcs).__new__(mcs, name, bases, attrs)
         new_class = type.__new__(mcs, name, bases, attrs)
 
-        if not hasattr(new_class, '_path'):
+        if not hasattr(new_class, '_path'):  # don't override if defined
             new_class._path = u'/{0}/{{1:id}}'.format(quote(name.lower()))
-        else:
+        else:  # otherwise make sure _path is a unicode instance
             new_class._path = unicode(new_class._path)
 
         if new_class._secure:
@@ -36,12 +52,19 @@ class ModelBase(type):
 
 
 class WrappedList(list):
+    """
+    Wrapped list implementation to dynamically create models as someone tries
+    to access an item or a slice in the list. Returns a generator instead, when
+    someone tries to iterate over the whole list.
+    """
     def __init__(self, iterable, wrapper):
         super(self.__class__, self).__init__(iterable)
         self.__wrapper = wrapper
 
     def __getitem__(self, key):
         item = super(self.__class__, self).__getitem__(key)
+        # check if we need to wrap the item, or if this is a slice, then check
+        # if we need to wrap any item in the slice
         should_wrap = (isinstance(item, dict) or isinstance(key, slice) and
                        any(isinstance(it, dict) for it in item))
 
@@ -53,6 +76,7 @@ class WrappedList(list):
         return item
 
     def __getslice__(self, i, j):
+        # We need this implementation for backwards compatibility.
         items = super(self.__class__, self).__getslice__(i, j)
         if any(isinstance(it, dict) for it in items):
             items = map(self.__wrapper, items)
@@ -60,14 +84,24 @@ class WrappedList(list):
         return items
 
     def __iter__(self):
+        # Call the base __iter__ to avoid inifnite recursion and then simply
+        # return an iterator.
         iterator = super(self.__class__, self).__iter__()
         return (self.__wrapper(item) for item in iterator)
 
     def __contains__(self, item):
+        # Not very performant but necessary to use Model instances as operands
+        # for the in operator.
         return item in iter(self)
 
 
 class LazyList(object):
+    """
+    Lazy list implementation for continuous iteration over very large lists
+    such as commits in a large repository. This is essentially a chained and
+    structured generator. No caching and memoization at all since the intended
+    usage is for small number of iterations.
+    """
     def __init__(self, wrapper, fetcher):
         self.__wrapper = wrapper
         self.__fetcher = fetcher
@@ -75,21 +109,33 @@ class LazyList(object):
     def __iter__(self):
         fetcher = self.__fetcher
         while fetcher:
-            data, fetcher = fetcher()
+            # fetcher is stored locally to prevent interference between
+            # possible multiple iterations going at once
+            data, fetcher = fetcher() # this part never gets hit if the below
+                                      # loop is not exhausted.
             for item in data:
                 yield self.__wrapper(item)
 
 
 class Relation(object):
+    """Base class for all relation types."""
     pass
 
 
 class Many(Relation):
+    """Class for 'many' relation type which is essentially a collection of a
+    certain model. Needs a base model for the collection and a path to get
+    the collection from. Falls back to provided model's path if none provided.
+
+    Use lazy=true if the number of items in the collection will be uncertain or
+    very large. This will make the property a generator instead of a list.
+
+    """
     def __init__(self, model, path=None, lazy=False):
         self.__model = model
-        self.__path = unicode(path) or model._path
+        self.__path = unicode(path) or model._path  # ensure unicode
         self.__lazy = lazy
-        self.__cache = dict()
+        self.__cache = dict()  # initialize cache
 
     def _with_owner(self, owner):
         def mapper(data):
