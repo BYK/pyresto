@@ -16,10 +16,10 @@ class Error(Exception):
 
 
 class ModelBase(type):
-    def __new__(cls, name, bases, attrs):
+    def __new__(mcs, name, bases, attrs):
         if name == 'Model':
-            return super(ModelBase, cls).__new__(cls, name, bases, attrs)
-        new_class = type.__new__(cls, name, bases, attrs)
+            return super(ModelBase, mcs).__new__(mcs, name, bases, attrs)
+        new_class = type.__new__(mcs, name, bases, attrs)
 
         if not hasattr(new_class, '_path'):
             new_class._path = u'/{0}/{{1:id}}'.format(quote(name.lower()))
