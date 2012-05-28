@@ -137,9 +137,16 @@ class Many(Relation):
         self.__model = model
         self.__path = unicode(path) or model._path  # ensure unicode
         self.__lazy = lazy
-        self.__cache = dict()  # initialize cache
+        self.__cache = dict()
 
     def _with_owner(self, owner):
+        """
+        A function factory method which returns a mapping/wrapping function.
+        The returned function creates a new instance of the model the relation
+        is defined by, sets its owner and "automatically fetched" internal flag
+        and returns it.
+
+        """
         def mapper(data):
             if isinstance(data, dict):
                 instance = self.__model(**data)
@@ -154,10 +161,21 @@ class Many(Relation):
         return mapper
 
     def __make_fetcher(self, url):
+        """
+        A function factory method which creates a simple fetcher function for
+        the model, used by the model internally. The "_rest_call" method
+        defined on the models is expected to return the data and a continuation
+        URL if there is any. This method generates a bound, fetcher function
+        that calls the internal "_rest_call" function on the method, and
+        processes its results to confront the requirements explained above.
+
+        """
         def fetcher():
             data, new_url = self.__model._rest_call(method='GET',
                                                     url=url,
                                                     fetch_all=False)
+            # Note the fetch_all=False in the call above, since this method is
+            # intended for iterative LazyList calls.
             if not data:
                 data = []
 
@@ -167,14 +185,19 @@ class Many(Relation):
         return fetcher
 
     def __get__(self, instance, owner):
+        # This function is called whener a field defined as Many is tried to be
+        # accessed. There is also another usage which lacks an object instance
+        # in which case this simply returns the Model class then.
         if not instance:
             return self.__model
 
         if instance not in self.__cache:
             model = self.__model
-            if not instance:
+            if not instance:  # TODO: remove me, I'm obsolete!
                 return model
 
+            # Get the necessary dict object collected from the chain of Models
+            # to properly populate the collection path
             path_params = instance._get_id_dict()
             if hasattr(instance, '_get_params'):
                 path_params.update(instance._get_params)
@@ -191,6 +214,17 @@ class Many(Relation):
 
 
 class Foreign(Relation):
+    """Class for 'foreign' relation type which is essentially a reference to a
+    certain model. Needs a base model for obvious reasons. The constructor
+    accepts optional key_property and key_extractor parameters.
+
+    key_property is the name of the property on the base model to get the id of
+    the foreign model. key_extractor is the function to extract the id of the
+    foreign model from the provided base model instance. This arguments is
+    provided to allow possible complex id extraction operations for foreign
+    fields.
+
+    """
     def __init__(self, model, key_property=None, key_extractor=None):
         self.__model = model
         if not key_property:
