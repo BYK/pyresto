@@ -193,8 +193,6 @@ class Many(Relation):
 
         if instance not in self.__cache:
             model = self.__model
-            if not instance:  # TODO: remove me, I'm obsolete!
-                return model
 
             # Get the necessary dict object collected from the chain of Models
             # to properly populate the collection path
