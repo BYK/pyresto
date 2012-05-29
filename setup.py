@@ -13,6 +13,7 @@ except ImportError:
 # Taken from kennethreitz/requests/setup.py
 package_directory = os.path.realpath(os.path.dirname(__file__))
 
+
 def get_file_contents(file_path):
     """Get the context of the file using full path name."""
     full_path = os.path.join(package_directory, file_path)

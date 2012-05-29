@@ -113,8 +113,8 @@ class LazyList(object):
         while fetcher:
             # fetcher is stored locally to prevent interference between
             # possible multiple iterations going at once
-            data, fetcher = fetcher() # this part never gets hit if the below
-                                      # loop is not exhausted.
+            data, fetcher = fetcher()  # this part never gets hit if the below
+                                       # loop is not exhausted.
             for item in data:
                 yield self.__wrapper(item)
 
@@ -186,9 +186,9 @@ class Many(Relation):
         return fetcher
 
     def __get__(self, instance, owner):
-        # This function is called whenever a field defined as Many is tried to be
-        # accessed. There is also another usage which lacks an object instance
-        # in which case this simply returns the Model class then.
+        # This function is called whenever a field defined as Many is tried to
+        # be accessed. There is also another usage which lacks an object
+        # instance in which case this simply returns the Model class then.
         if not instance:
             return self.__model
 
