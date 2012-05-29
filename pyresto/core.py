@@ -186,7 +186,7 @@ class Many(Relation):
         return fetcher
 
     def __get__(self, instance, owner):
-        # This function is called whener a field defined as Many is tried to be
+        # This function is called whenever a field defined as Many is tried to be
         # accessed. There is also another usage which lacks an object instance
         # in which case this simply returns the Model class then.
         if not instance:
