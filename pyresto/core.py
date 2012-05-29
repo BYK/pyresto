@@ -125,7 +125,8 @@ class Relation(object):
 
 
 class Many(Relation):
-    """Class for 'many' relation type which is essentially a collection of a
+    """
+    Class for 'many' relation type which is essentially a collection of a
     certain model. Needs a base model for the collection and a path to get
     the collection from. Falls back to provided model's path if none provided.
 
@@ -212,7 +213,8 @@ class Many(Relation):
 
 
 class Foreign(Relation):
-    """Class for 'foreign' relation type which is essentially a reference to a
+    """
+    Class for 'foreign' relation type which is essentially a reference to a
     certain model. Needs a base model for obvious reasons. The constructor
     accepts optional key_property and key_extractor parameters.
 
