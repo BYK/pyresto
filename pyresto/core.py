@@ -186,7 +186,7 @@ class Many(Relation):
         return fetcher
 
     def __get__(self, instance, owner):
-        # This function is called whenever a field defined as Many is tried to
+        # This method is called whenever a field defined as Many is tried to
         # be accessed. There is also another usage which lacks an object
         # instance in which case this simply returns the Model class then.
         if not instance:
@@ -236,6 +236,7 @@ class Foreign(Relation):
         self.__cache = dict()
 
     def __get__(self, instance, owner):
+        # Please see Many.__get__ for more info on this method.
         if not instance:
             return self.__model
 
@@ -249,6 +250,55 @@ class Foreign(Relation):
 
 
 class Model(object):
+    """
+    The base model class where every data model using pyresto should be
+    inherited from. Uses ModelBase as its metaclass for various reasons
+    explained in ModelBase.
+
+    _secure class variable determines wheter the HTTPS or the HTTP protocol
+    should be used for requests made to the REST server. Defaults to True
+    meaning HTTPS will be used.
+
+    _host is the hostname for the API endpoint for the Model which is used in
+    conjunction with the _secure property to generate a bound HTTP request
+    factory at the time of class definition. See ModelBase for implementation.
+
+    _path is the path to be used while fetching the instance from the server.
+    It is a format string using the new format notation defined for str.format
+    method. The primary key will be passed under the same name defined in the
+    _pk property and any other named parameters passed to the Model.get method
+    or the class constructor are available to this string for formatting.
+
+    _continuator is a class method which receives the class object (like a
+    regular class method) and the request made to the server. This method is
+    expected to return a continuation URL for the fetched resource, if there is
+    any (like the next page's URL for paginated content) and None otherwise.
+    Defaults to a dummy function which always returns None.
+
+    _parser is a class method which receives the class object and the body text
+    of the server response to be parsed. It is expected to return a dictionary
+    object having the properties of the related model. Defaults to a
+    "staticazed" version of json.loads so it is not necessary to override it if
+    the response type is valid JSON.
+
+    _pk is a class variable where the attribute name for the primary key of the
+    model is stored as a string. This property is required and not providing a
+    default is intentional to force developers to explicitly define it on every
+    model class.
+
+    _fetched is an instance variable which is used to determine if the model
+    instance is filled from the server or not. It can be modified for certain
+    usages but this is not advised. If _fetched is false when an attribute not
+    in the class dictionary tried to be accessed, the __fetch method is called
+    before raising an AttributeError.
+
+    _get_params is an instance variable which holds the additional named get
+    parameters provided to the Model.get class method to fetch the instance. It
+    is used internally by the relation classes to have more info about the
+    current model instance while fetching its related resources.
+
+
+    """
     __metaclass__ = ModelBase
     _secure = True
     _continuator = lambda x, y: None
@@ -257,6 +307,20 @@ class Model(object):
     _get_params = dict()
 
     def __init__(self, **kwargs):
+        """
+        Constructor for model instances. All named parameters passed to this
+        method are bound to the newly created instance. Any property names
+        provided at this level which are interfering with the predefined class
+        relations (especially for Foreign fields) prepended "__" to avoid
+        conflicts and to be used by the related relation class. So for instance
+        if your class has "father = Foreign(Father)" and "father" is provided
+        at the level of instantiation, its value is saved under __father to be
+        used by the Foreign relationship class as the id of the foreign model.
+
+        Constructor also tries to populate the _current_path instance variable
+        by formatting the Model._path using the properties provided.
+
+        """
         self.__dict__.update(kwargs)
 
         cls = self.__class__
@@ -268,12 +332,13 @@ class Model(object):
 
         try:
             self._current_path = self._path and (
-            self._path.format(**self.__dict__))
+                                    self._path.format(**self.__dict__))
         except KeyError:
             self._current_path = None
 
     @property
     def _id(self):
+        """A method returning the model instance's primary key value."""
         return getattr(self, self._pk)
 
     def _get_id_dict(self):
@@ -322,6 +387,8 @@ class Model(object):
                         response.status)
 
     def __fetch(self):
+        # if we don't have a path then we cannot fetch anything since we don't
+        # know the address of the resource.
         if not self._current_path:
             self._fetched = True
             return
@@ -335,10 +402,10 @@ class Model(object):
             self._fetched = True
 
     def __getattr__(self, name):
-        if self._fetched:
+        if self._fetched:  # if we fetched and still don't have it, no luck!
             raise AttributeError
         self.__fetch()
-        return getattr(self, name)
+        return getattr(self, name)  # try again after fetching
 
     @classmethod
     def get(cls, model_id, **kwargs):
