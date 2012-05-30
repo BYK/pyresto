@@ -19,7 +19,7 @@ class GitHubModel(Model):
         return links.setdefault('next', None)
 
     def __eq__(self, other):
-        return  isinstance(other, self.__class__) and self.url == other.url
+        return isinstance(other, self.__class__) and self.url == other.url
 
 
 class Comment(GitHubModel):
