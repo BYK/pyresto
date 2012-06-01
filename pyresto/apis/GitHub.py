@@ -3,6 +3,7 @@
 from ..core import Foreign, Many, Model
 from ..helpers import link_header_continuator
 
+
 class GitHubModel(Model):
     _host = 'api.github.com'
     _continuator = link_header_continuator
