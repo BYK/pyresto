@@ -6,6 +6,7 @@ pyresto.core
 
 This module contains all core pyresto classes such as Error, Model and relation
 classes.
+
 """
 
 import httplib

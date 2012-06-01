@@ -1,22 +1,11 @@
 # coding: utf-8
 
-import re
 from ..core import Foreign, Many, Model
-
+from ..helpers import link_header_continuator
 
 class GitHubModel(Model):
     _host = 'api.github.com'
-    _link_parser = re.compile(r'\<([^\>]+)\>;\srel="(\w+)"', re.I | re.U)
-
-    @classmethod
-    def _continuator(cls, response):
-        link_val = response.getheader('Link', None)
-        if not link_val:
-            return
-
-        links = dict(((cls._link_parser.match(link.strip()).group(2, 1)
-        for link in link_val.split(','))))
-        return links.setdefault('next', None)
+    _continuator = link_header_continuator
 
 
 class Comment(GitHubModel):
