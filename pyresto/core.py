@@ -407,6 +407,9 @@ class Model(object):
         self.__fetch()
         return getattr(self, name)  # try again after fetching
 
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and self._id == other._id
+
     @classmethod
     def get(cls, model_id, **kwargs):
         kwargs[cls._pk] = model_id
