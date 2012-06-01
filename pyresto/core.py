@@ -339,7 +339,7 @@ class Model(object):
 
     @property
     def _id(self):
-        """A method returning the model instance's primary key value."""
+        """A property that returns the model instance's primary key value."""
         return getattr(self, self._pk)
 
     def _get_id_dict(self):
