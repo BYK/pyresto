@@ -10,12 +10,15 @@ classes.
 """
 
 import httplib
+
+
 try:
     import json
 except ImportError:
     import simplejson as json
 import logging
 from urllib import quote
+
 
 __all__ = ('Error', 'Model', 'Many', 'Foreign')
 
@@ -33,6 +36,7 @@ class ModelBase(type):
     model based on the _secure class variable defined in the model.
 
     """
+
     def __new__(mcs, name, bases, attrs):
         if name == 'Model':  # prevent infinite recursion
             return super(ModelBase, mcs).__new__(mcs, name, bases, attrs)
@@ -59,6 +63,7 @@ class WrappedList(list):
     someone tries to iterate over the whole list.
 
     """
+
     def __init__(self, iterable, wrapper):
         super(self.__class__, self).__init__(iterable)
         self.__wrapper = wrapper
@@ -73,6 +78,7 @@ class WrappedList(list):
         if should_wrap:
             item = ([self.__wrapper(_) for _ in item]
                     if isinstance(key, slice) else self.__wrapper(item))
+
             self[key] = item  # cache wrapped item/slice
 
         return item
@@ -105,6 +111,7 @@ class LazyList(object):
     usage is for small number of iterations.
 
     """
+
     def __init__(self, wrapper, fetcher):
         self.__wrapper = wrapper
         self.__fetcher = fetcher
@@ -115,7 +122,7 @@ class LazyList(object):
             # fetcher is stored locally to prevent interference between
             # possible multiple iterations going at once
             data, fetcher = fetcher()  # this part never gets hit if the below
-                                       # loop is not exhausted.
+            # loop is not exhausted.
             for item in data:
                 yield self.__wrapper(item)
 
@@ -135,6 +142,7 @@ class Many(Relation):
     very large. This will make the property a generator instead of a list.
 
     """
+
     def __init__(self, model, path=None, lazy=False):
         self.__model = model
         self.__path = unicode(path) or model._path  # ensure unicode
@@ -149,6 +157,7 @@ class Many(Relation):
         and returns it.
 
         """
+
         def mapper(data):
             if isinstance(data, dict):
                 instance = self.__model(**data)
@@ -172,6 +181,7 @@ class Many(Relation):
         processes its results to confront the requirements explained above.
 
         """
+
         def fetcher():
             data, new_url = self.__model._rest_call(method='GET',
                                                     url=url,
@@ -226,6 +236,7 @@ class Foreign(Relation):
     fields.
 
     """
+
     def __init__(self, model, key_property=None, key_extractor=None):
         self.__model = model
         if not key_property:
@@ -333,7 +344,7 @@ class Model(object):
 
         try:
             self._current_path = self._path and (
-                                    self._path.format(**self.__dict__))
+                self._path.format(**self.__dict__))
         except KeyError:
             self._current_path = None
 
@@ -417,7 +428,8 @@ class Model(object):
         else:
             descriptor = ' - {0}: {1}'.format(self._pk, self._id)
 
-        return '<Pyresto.Model.{0} [{1}{2}]>'.format(self.__class__.__name__, self._host, descriptor)
+        return '<Pyresto.Model.{0} [{1}{2}]>'.format(self.__class__.__name__,
+                                                     self._host, descriptor)
 
     @classmethod
     def get(cls, model_id, **kwargs):
