@@ -208,7 +208,7 @@ class Many(Relation):
 
             # Get the necessary dict object collected from the chain of Models
             # to properly populate the collection path
-            path_params = instance._get_id_dict()
+            path_params = instance._get_tree_dict()
             if hasattr(instance, '_get_params'):
                 path_params.update(instance._get_params)
             path = self.__path.format(**path_params)
@@ -253,7 +253,7 @@ class Foreign(Relation):
             return self.__model
 
         if instance not in self.__cache:
-            keys = instance._get_id_dict()
+            keys = instance._get_tree_dict()
             keys.update(self.__key_extractor(instance))
             pk = keys.pop(self.__model._pk)
             self.__cache[instance] = self.__model.get(pk, **keys)
@@ -353,7 +353,7 @@ class Model(object):
         """A property that returns the model instance's primary key value."""
         return getattr(self, self._pk)
 
-    def _get_id_dict(self):
+    def _get_tree_dict(self):
         ids = dict()
         owner = self
         while owner:
