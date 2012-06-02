@@ -411,6 +411,14 @@ class Model(object):
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self._id == other._id
 
+    def __repr__(self):
+        if self._current_path:
+            descriptor = self._current_path
+        else:
+            descriptor = ' - {0}: {1}'.format(self._pk, self._id)
+
+        return '<Pyresto.Model.{0} [{1}{2}]>'.format(self.__class__.__name__, self._host, descriptor)
+
     @classmethod
     def get(cls, model_id, **kwargs):
         kwargs[cls._pk] = model_id
