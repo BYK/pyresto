@@ -208,7 +208,7 @@ class Many(Relation):
 
             # Get the necessary dict object collected from the chain of Models
             # to properly populate the collection path
-            path_params = instance.parent_dict
+            path_params = instance._parents
             if hasattr(instance, '_get_params'):
                 path_params.update(instance._get_params)
             path = self.__path.format(**path_params)
@@ -253,7 +253,7 @@ class Foreign(Relation):
             return self.__model
 
         if instance not in self.__cache:
-            keys = instance.parent_dict
+            keys = instance._parents
             keys.update(self.__key_extractor(instance))
             pk = keys.pop(self.__model._pk)
             self.__cache[instance] = self.__model.get(pk, **keys)
@@ -355,7 +355,7 @@ class Model(object):
         return getattr(self, self._pk)
 
     @property
-    def parent_dict(self):
+    def _parents(self):
         """
         A property that returns a look-up dictionary for all parents of
         the current instance. Uses lowercased class names for keys and the
