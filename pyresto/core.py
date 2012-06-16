@@ -354,6 +354,12 @@ class Model(object):
         return getattr(self, self._pk)
 
     def _get_tree_dict(self):
+        """
+        A private method that builds a look-up dictionary for all parents of
+        the current instance. Uses lowercased class names for keys and the
+        instance references as the values.
+
+        """
         ids = dict()
         owner = self
         while owner:
