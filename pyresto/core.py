@@ -208,7 +208,7 @@ class Many(Relation):
 
             # Get the necessary dict object collected from the chain of Models
             # to properly populate the collection path
-            path_params = instance._get_tree_dict()
+            path_params = instance.parent_dict
             if hasattr(instance, '_get_params'):
                 path_params.update(instance._get_params)
             path = self.__path.format(**path_params)
@@ -253,7 +253,7 @@ class Foreign(Relation):
             return self.__model
 
         if instance not in self.__cache:
-            keys = instance._get_tree_dict()
+            keys = instance.parent_dict
             keys.update(self.__key_extractor(instance))
             pk = keys.pop(self.__model._pk)
             self.__cache[instance] = self.__model.get(pk, **keys)
@@ -317,6 +317,7 @@ class Model(object):
     _parser = staticmethod(json.loads)
     _fetched = False
     _get_params = dict()
+    __ids = None
 
     def __init__(self, **kwargs):
         """
@@ -353,19 +354,22 @@ class Model(object):
         """A property that returns the model instance's primary key value."""
         return getattr(self, self._pk)
 
-    def _get_tree_dict(self):
+    @property
+    def parent_dict(self):
         """
-        A private method that builds a look-up dictionary for all parents of
+        A property that returns a look-up dictionary for all parents of
         the current instance. Uses lowercased class names for keys and the
         instance references as the values.
 
         """
-        ids = dict()
-        owner = self
-        while owner:
-            ids[owner.__class__.__name__.lower()] = owner
-            owner = getattr(owner, '_pyresto_owner', None)
-        return ids
+        if self.__ids is None:
+            self.__ids = dict()
+            owner = self
+            while owner:
+                self.__ids[owner.__class__.__name__.lower()] = owner
+                owner = getattr(owner, '_pyresto_owner', None)
+
+        return self.__ids
 
     @classmethod
     def _rest_call(cls, fetch_all=True, **kwargs):
