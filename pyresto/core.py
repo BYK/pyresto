@@ -373,6 +373,23 @@ class Model(object):
 
     @classmethod
     def _rest_call(cls, fetch_all=True, **kwargs):
+        """
+        A method which handles all the heavy HTTP stuff by itself. This is
+        actually a private method but to let the instances and derived classes
+        to call it, it is made "protected" using only a single "_".
+
+        fetch_all determines if the function should recursively fetch any
+        "paginated" resource or simply return the downloaded and parsed data
+        along with a continuation URL.
+
+        All other keyword arguments are passed to the HTTP request as
+        parameters such as method, url etc.
+
+        Returns a tuple where the first part is the parsed data from the server
+        using cls._parser, and the second half is any continuation URL for more
+        of the same resource or None if there isn't any.
+
+        """
         conn = cls._get_connection()
         response = None
         try:
@@ -442,8 +459,18 @@ class Model(object):
                                                      self._host, descriptor)
 
     @classmethod
-    def get(cls, model_id, **kwargs):
-        kwargs[cls._pk] = model_id
+    def get(cls, pk, **kwargs):
+        """
+        A class method which fetches and instantinates the resource defined by
+        the provided pk value. Any other extra keyword arguments are used to
+        format the cls._path variable to construct the request URL.
+
+        pk is the primary key value for the requested resource.
+
+        returns None on server side errors such as a 404.
+
+        """
+        kwargs[cls._pk] = pk
         path = cls._path.format(**kwargs)
         data = cls._rest_call(method='GET', url=path)[0]
 
