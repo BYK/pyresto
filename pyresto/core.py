@@ -189,7 +189,7 @@ class Many(Relation):
             # Note the fetch_all=False in the call above, since this method is
             # intended for iterative LazyList calls.
             if not data:
-                data = []
+                data = list()
 
             new_fetcher = self.__make_fetcher(new_url) if new_url else None
             return data, new_fetcher
@@ -219,7 +219,7 @@ class Many(Relation):
             else:
                 data, next_url = model._rest_call(method='GET', url=path)
                 self.__cache[instance] =\
-                            WrappedList(data or [], self._with_owner(instance))
+                            WrappedList(data or list(), self._with_owner(instance))
         return self.__cache[instance]
 
 
