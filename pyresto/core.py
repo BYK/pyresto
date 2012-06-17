@@ -144,6 +144,15 @@ class Many(Relation):
     """
 
     def __init__(self, model, path=None, lazy=False):
+        """
+        Constructor for Many relation instances.
+
+        model is the model class that each instance in the collection will be a
+        member of.
+
+        path [optional] is a unicode path to fetch the collection items, if it
+        is different than model._path, which usually is
+        """
         self.__model = model
         self.__path = unicode(path) or model._path  # ensure unicode
         self.__lazy = lazy
@@ -226,18 +235,25 @@ class Many(Relation):
 class Foreign(Relation):
     """
     Class for 'foreign' relation type which is essentially a reference to a
-    certain model. Needs a base model for obvious reasons. The constructor
-    accepts optional key_property and key_extractor parameters.
-
-    key_property is the name of the property on the base model to get the id of
-    the foreign model. key_extractor is the function to extract the id of the
-    foreign model from the provided base model instance. This arguments is
-    provided to allow possible complex id extraction operations for foreign
-    fields.
+    certain model. Needs a base model for obvious reasons.
 
     """
 
     def __init__(self, model, key_property=None, key_extractor=None):
+        """
+        Constructor for the Foreign relations.
+
+        model is the model class for the foreign resource.
+
+        key_property [optional] is the name of the property on the base model
+        which has the id of the foreign model.
+
+        key_extractor [optional] is the function to extract the id of the
+        foreign model from the provided base model instance. This arguments is
+        provided to allow possible complex id extraction operations for foreign
+        fields.
+
+        """
         self.__model = model
         if not key_property:
             key_property = model.__name__.lower()

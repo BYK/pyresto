@@ -23,8 +23,6 @@ def link_header_continuator(cls, response):
     as their _continuator method which parses the standard HTTP Link header and
     returns the url provided under the name "next" for continuation.
 
-    Note: This behavior might be GitHub specific.
-
     """
     link_val = response.getheader('Link', None)
     if not link_val:
