@@ -1,14 +1,27 @@
 Pyresto
 =======
 
+An ORM package to prevent repettive work for writing clients for RESTful APIs.
+
 Getting Started
 ---------------
 
-Tutorial
---------
+Install with **pip** or **easy_install**::
+
+    pip install pyresto
+    easy_install pyresto
+
+or download the latest version from `GitHub <http://github.com/BYK/pyresto>`_::
+
+    git clone git://github.com/BYK/pyresto.git
+    cd pyresto
+    python setup.py develop
+
+Documentation
+-------------
 
 .. toctree::
-   :maxdepth: 2
+    :maxdepth: 2
 
    tutorial
 

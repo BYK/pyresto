@@ -138,7 +138,7 @@ class Many(Relation):
     certain model. Needs a base model for the collection and a path to get
     the collection from. Falls back to provided model's path if none provided.
 
-    Use lazy=true if the number of items in the collection will be uncertain or
+    Use ``lazy=True`` if the number of items in the collection will be uncertain or
     very large. This will make the property a generator instead of a list.
 
     """
@@ -147,11 +147,13 @@ class Many(Relation):
         """
         Constructor for Many relation instances.
 
-        model is the model class that each instance in the collection will be a
-        member of.
+        :param model: is the model class that each instance in the collection will be a member of.
+        :type model: object
 
-        path [optional] is a unicode path to fetch the collection items, if it
-        is different than model._path, which usually is
+        :param path: (optional) is a unicode path to fetch the collection items, if it is different than model._path, which usually is.
+        :type path: string or None
+
+        :type lazy: boolean
         """
         self.__model = model
         self.__path = unicode(path) or model._path  # ensure unicode
@@ -166,7 +168,6 @@ class Many(Relation):
         and returns it.
 
         """
-
         def mapper(data):
             if isinstance(data, dict):
                 instance = self.__model(**data)
@@ -243,15 +244,12 @@ class Foreign(Relation):
         """
         Constructor for the Foreign relations.
 
-        model is the model class for the foreign resource.
+        :param model: is the model class for the foreign resource.
+        :type mode: class
 
-        key_property [optional] is the name of the property on the base model
-        which has the id of the foreign model.
+        :param key_property: (optional) is the name of the property on the base model which has the id of the foreign model.
 
-        key_extractor [optional] is the function to extract the id of the
-        foreign model from the provided base model instance. This arguments is
-        provided to allow possible complex id extraction operations for foreign
-        fields.
+        :param key_extractor: (optional) is the function to extract the id of the foreign model from the provided base model instance. This arguments is provided to allow possible complex id extraction operations for foreign fields.
 
         """
         self.__model = model
@@ -283,48 +281,21 @@ class Model(object):
     inherited from. Uses ModelBase as its metaclass for various reasons
     explained in ModelBase.
 
-    _secure class variable determines wheter the HTTPS or the HTTP protocol
-    should be used for requests made to the REST server. Defaults to True
-    meaning HTTPS will be used.
+    :attr _secure: class variable determines whether the HTTPS or the HTTP protocol should be used for requests made to the REST server. Defaults to ``True`` meaning HTTPS will be used.
 
-    _host is the hostname for the API endpoint for the Model which is used in
-    conjunction with the _secure property to generate a bound HTTP request
-    factory at the time of class definition. See ModelBase for implementation.
+    :attr _host: is the hostname for the API endpoint for the Model which is used in conjunction with the _secure property to generate a bound HTTP request factory at the time of class definition. See ModelBase for implementation.
 
-    _path is the path to be used while fetching the instance from the server.
-    It is a format string using the new format notation defined for str.format
-    method. The primary key will be passed under the same name defined in the
-    _pk property and any other named parameters passed to the Model.get method
-    or the class constructor are available to this string for formatting.
+    :attr _path: is the path to be used while fetching the instance from the server. It is a format string using the new format notation defined for str.format method. The primary key will be passed under the same name defined in the _pk property and any other named parameters passed to the Model.get method or the class constructor are available to this string for formatting.
 
-    _continuator is a class method which receives the class object (like a
-    regular class method) and the request made to the server. This method is
-    expected to return a continuation URL for the fetched resource, if there is
-    any (like the next page's URL for paginated content) and None otherwise.
-    Defaults to a dummy function which always returns None.
+    :attr _continuator: is a class method which receives the class object (like a regular class method) and the request made to the server. This method is expected to return a continuation URL for the fetched resource, if there is any (like the next page's URL for paginated content) and None otherwise. Defaults to a dummy function which always returns None.
 
-    _parser is a class method which receives the class object and the body text
-    of the server response to be parsed. It is expected to return a dictionary
-    object having the properties of the related model. Defaults to a
-    "staticazed" version of json.loads so it is not necessary to override it if
-    the response type is valid JSON.
+    :attr _parser: is a class method which receives the class object and the body text of the server response to be parsed. It is expected to return a dictionary object having the properties of the related model. Defaults to a "staticazed" version of json.loads so it is not necessary to override it if the response type is valid JSON.
 
-    _pk is a class variable where the attribute name for the primary key of the
-    model is stored as a string. This property is required and not providing a
-    default is intentional to force developers to explicitly define it on every
-    model class.
+    :attr_pk: is a class variable where the attribute name for the primary key of the model is stored as a string. This property is required and not providing a default is intentional to force developers to explicitly define it on every model class.
 
-    _fetched is an instance variable which is used to determine if the model
-    instance is filled from the server or not. It can be modified for certain
-    usages but this is not advised. If _fetched is false when an attribute not
-    in the class dictionary tried to be accessed, the __fetch method is called
-    before raising an AttributeError.
+    :attr _fetched: is an instance variable which is used to determine if the model instance is filled from the server or not. It can be modified for certain usages but this is not advised. If _fetched is false when an attribute not in the class dictionary tried to be accessed, the __fetch method is called before raising an ``AttributeError``.
 
-    _get_params is an instance variable which holds the additional named get
-    parameters provided to the Model.get class method to fetch the instance. It
-    is used internally by the relation classes to have more info about the
-    current model instance while fetching its related resources.
-
+    :attr _get_params: is an instance variable which holds the additional named get parameters provided to the Model.get class method to fetch the instance. It is used internally by the relation classes to have more info about the current model instance while fetching its related resources.
 
     """
     __metaclass__ = ModelBase
@@ -392,18 +363,18 @@ class Model(object):
         """
         A method which handles all the heavy HTTP stuff by itself. This is
         actually a private method but to let the instances and derived classes
-        to call it, it is made "protected" using only a single "_".
-
-        fetch_all determines if the function should recursively fetch any
-        "paginated" resource or simply return the downloaded and parsed data
-        along with a continuation URL.
+        to call it, it is made `protected` using only a single `_`.
 
         All other keyword arguments are passed to the HTTP request as
         parameters such as method, url etc.
 
-        Returns a tuple where the first part is the parsed data from the server
-        using cls._parser, and the second half is any continuation URL for more
-        of the same resource or None if there isn't any.
+        :param fetch_all: determines if the function should recursively fetch any "paginated" resource or simply return the downloaded and parsed data along with a continuation URL.
+
+        :type fetch_all: boolean
+
+        :returns: Returns a tuple where the first part is the parsed data from the server using ``cls._parser``, and the second half is any continuation URL for more of the same resource or ``None`` if there isn't any.
+
+        :rtype: tuple or ``None``
 
         """
         conn = cls._get_connection()
@@ -479,11 +450,11 @@ class Model(object):
         """
         A class method which fetches and instantinates the resource defined by
         the provided pk value. Any other extra keyword arguments are used to
-        format the cls._path variable to construct the request URL.
+        format the `cls._path` variable to construct the request URL.
 
-        pk is the primary key value for the requested resource.
+        :param pk: is the primary key value for the requested resource.
 
-        returns None on server side errors such as a 404.
+        :rtype: ``None`` on server side errors such as a 404.
 
         """
         kwargs[cls._pk] = pk
