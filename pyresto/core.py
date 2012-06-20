@@ -278,24 +278,24 @@ class Foreign(Relation):
 class Model(object):
     """
     The base model class where every data model using pyresto should be
-    inherited from. Uses ModelBase as its metaclass for various reasons
-    explained in ModelBase.
+    inherited from. Uses :py:class:`ModelBase` as its metaclass for various reasons
+    explained in :py:class:`ModelBase`.
 
     :attr _secure: class variable determines whether the HTTPS or the HTTP protocol should be used for requests made to the REST server. Defaults to ``True`` meaning HTTPS will be used.
 
-    :attr _host: is the hostname for the API endpoint for the Model which is used in conjunction with the _secure property to generate a bound HTTP request factory at the time of class definition. See ModelBase for implementation.
+    :attr _host: is the hostname for the API endpoint for the :py:class:`Model` which is used in conjunction with the :py:attr:`_secure` property to generate a bound HTTP request factory at the time of class definition. See :py:class:`ModelBase` for implementation.
 
-    :attr _path: is the path to be used while fetching the instance from the server. It is a format string using the new format notation defined for str.format method. The primary key will be passed under the same name defined in the _pk property and any other named parameters passed to the Model.get method or the class constructor are available to this string for formatting.
+    :attr _path: is the path to be used while fetching the instance from the server. It is a format string using the new format notation defined for str.format method. The primary key will be passed under the same name defined in the :py:attr:`_pk` property and any other named parameters passed to the :py:class:`Model`.get method or the class constructor are available to this string for formatting.
 
-    :attr _continuator: is a class method which receives the class object (like a regular class method) and the request made to the server. This method is expected to return a continuation URL for the fetched resource, if there is any (like the next page's URL for paginated content) and None otherwise. Defaults to a dummy function which always returns None.
+    :attr _continuator: is a class method which receives the class object (like a regular class method) and the request made to the server. This method is expected to return a continuation URL for the fetched resource, if there is any (like the next page's URL for paginated content) and ``None`` otherwise. Defaults to a dummy function which always returns ``None``.
 
-    :attr _parser: is a class method which receives the class object and the body text of the server response to be parsed. It is expected to return a dictionary object having the properties of the related model. Defaults to a "staticazed" version of json.loads so it is not necessary to override it if the response type is valid JSON.
+    :attr _parser: is a class method which receives the class object and the body text of the server response to be parsed. It is expected to return a dictionary object having the properties of the related model. Defaults to a "staticazed" version of ``json.loads`` so it is not necessary to override it if the response type is valid JSON.
 
-    :attr_pk: is a class variable where the attribute name for the primary key of the model is stored as a string. This property is required and not providing a default is intentional to force developers to explicitly define it on every model class.
+    :attr_pk: is a class variable where the attribute name for the primary key of the :py:class:`Model` is stored as a string. This property is required and not providing a default is intentional to force developers to explicitly define it on every :py:class:`Model` class.
 
-    :attr _fetched: is an instance variable which is used to determine if the model instance is filled from the server or not. It can be modified for certain usages but this is not advised. If _fetched is false when an attribute not in the class dictionary tried to be accessed, the __fetch method is called before raising an ``AttributeError``.
+    :attr _fetched: is an instance variable which is used to determine if the :py:class:`Model` instance is filled from the server or not. It can be modified for certain usages but this is not advised. If _fetched is ``False`` when an attribute not in the class dictionary tried to be accessed, the :py:meth:`__fetch` method is called before raising an :py:exc:`AttributeError`.
 
-    :attr _get_params: is an instance variable which holds the additional named get parameters provided to the Model.get class method to fetch the instance. It is used internally by the relation classes to have more info about the current model instance while fetching its related resources.
+    :attr _get_params: is an instance variable which holds the additional named get parameters provided to the :py:class:`Model`.get class method to fetch the instance. It is used internally by the relation classes to have more info about the current model instance while fetching its related resources.
 
     """
     __metaclass__ = ModelBase
