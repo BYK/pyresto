@@ -1,7 +1,7 @@
 Pyresto
 =======
 
-An ORM package to prevent repettive work for writing clients for RESTful APIs.
+An ORM package to prevent repetitive work for writing clients for RESTful APIs.
 
 Getting Started
 ---------------
