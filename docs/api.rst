@@ -5,6 +5,11 @@ API
 
 .. module:: pyresto.core
 
+pyresto.core.ModelBase
+------------------
+
+.. autoclass:: ModelBase
+
 pyresto.core.Model
 ------------------
 
