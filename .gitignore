@@ -15,3 +15,4 @@ lib/
 man/
 # Test purposes
 playground.py
+.tox
