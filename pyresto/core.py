@@ -30,10 +30,11 @@ class Error(Exception):
 
 class ModelBase(type):
     """
-    Meta class for Model type. This class automagically creates the necessary
-    _path class variable if it is not already defined. The default path pattern
-    is `/ModelName/{id}`. It also generates the connection factory for the new
-    model based on the _secure class variable defined in the model.
+    Meta class for :class:`Model` class. This class automagically creates the
+    necessary :attr:`Model._path` class variable if it is not already
+    defined. The default path pattern is ``/ModelName/{id}``. It also generates
+    the connection factory for the new model based on the :attr:`Model._secure`
+    class variable defined in the model.
 
     """
 
@@ -134,12 +135,10 @@ class Relation(object):
 
 class Many(Relation):
     """
-    Class for 'many' relation type which is essentially a collection of a
-    certain model. Needs a base model for the collection and a path to get
-    the collection from. Falls back to provided model's path if none provided.
-
-    Use ``lazy=True`` if the number of items in the collection will be uncertain or
-    very large. This will make the property a generator instead of a list.
+    Class for 'many' :class:`Relation` type which is essentially a collection
+    for a certain model. Needs a base :class:`Model` for the collection and a
+    `path` to get the collection from. Falls back to provided model's
+    :attr:`Model.path` if not provided.
 
     """
 
@@ -147,13 +146,21 @@ class Many(Relation):
         """
         Constructor for Many relation instances.
 
-        :param model: is the model class that each instance in the collection will be a member of.
-        :type model: object
-
-        :param path: (optional) is a unicode path to fetch the collection items, if it is different than model._path, which usually is.
+        :param model: The model class that each instance in the collection
+                      will be a member of.
+        :type model: Model
+        :param path: (optional) The unicode path to fetch the collection items,
+                     if different than :attr:`Model._path`, which usually is.
         :type path: string or None
 
+        :param lazy: (optional) A boolean indicator to determine the type of
+                     the many field. Normally, it will be a :class:`WrappedList`
+                     which is essentially a list. Use ``lazy=True`` if the
+                     number of items in the collection will be uncertain or
+                     very large which will result in a :class:`LazyList`
+                     property which is practically a generator.
         :type lazy: boolean
+
         """
         self.__model = model
         self.__path = unicode(path) or model._path  # ensure unicode
@@ -163,9 +170,12 @@ class Many(Relation):
     def _with_owner(self, owner):
         """
         A function factory method which returns a mapping/wrapping function.
-        The returned function creates a new instance of the model the relation
-        is defined by, sets its owner and "automatically fetched" internal flag
-        and returns it.
+        The returned function creates a new instance of the :class:`Model` that
+        the :class:`Relation` is defined with, sets its owner and
+        "automatically fetched" internal flag and returns it.
+
+        :param owner: The owner Model for the collection and its items.
+        :type owner: Model
 
         """
         def mapper(data):
@@ -184,11 +194,15 @@ class Many(Relation):
     def __make_fetcher(self, url):
         """
         A function factory method which creates a simple fetcher function for
-        the model, used by the model internally. The "_rest_call" method
-        defined on the models is expected to return the data and a continuation
-        URL if there is any. This method generates a bound, fetcher function
-        that calls the internal "_rest_call" function on the method, and
-        processes its results to confront the requirements explained above.
+        the :class:`Many` relation, that is used by internally. The
+        :meth:`Model._rest_call` method defined on the models is expected to
+        return the data and a continuation URL if there is any. This method
+        generates a bound, fetcher function that calls the internal
+        :meth:`Model._rest_call` function on the :class:`Model`, and processes
+        its results to confront the requirements explained above.
+
+        :param url: The url which the fetcher function will be bound to.
+        :type url: unicode
 
         """
 
@@ -229,27 +243,36 @@ class Many(Relation):
             else:
                 data, next_url = model._rest_call(method='GET', url=path)
                 self.__cache[instance] =\
-                            WrappedList(data or list(), self._with_owner(instance))
+                        WrappedList(data or list(), self._with_owner(instance))
         return self.__cache[instance]
 
 
 class Foreign(Relation):
     """
-    Class for 'foreign' relation type which is essentially a reference to a
-    certain model. Needs a base model for obvious reasons.
+    Class for 'foreign' :class:`Relation` type which is essentially a reference
+    to a certain :class:`Model`. Needs a base :class:`Model` for obvious
+    reasons.
 
     """
 
     def __init__(self, model, key_property=None, key_extractor=None):
         """
-        Constructor for the Foreign relations.
+        Constructor for the :class:`Foreign` relations.
 
-        :param model: is the model class for the foreign resource.
-        :type mode: class
+        :param model: The model class for the foreign resource.
+        :type model: Model
 
-        :param key_property: (optional) is the name of the property on the base model which has the id of the foreign model.
+        :param key_property: (optional) The name of the property on the base
+                             :class:`Model` which contains the id for the
+                             foreign model.
+        :type key_property: string or None
 
-        :param key_extractor: (optional) is the function to extract the id of the foreign model from the provided base model instance. This arguments is provided to allow possible complex id extraction operations for foreign fields.
+        :param key_extractor: (optional) The function that will extract the id
+                              of the foreign model from the provided
+                              :class:`Model` instance. This argument is
+                              provided to make it possible to handle complex id
+                              extraction operations for foreign fields.
+        :type key_extractor: function(model)
 
         """
         self.__model = model
@@ -278,32 +301,89 @@ class Foreign(Relation):
 class Model(object):
     """
     The base model class where every data model using pyresto should be
-    inherited from. Uses :py:class:`ModelBase` as its metaclass for various reasons
-    explained in :py:class:`ModelBase`.
-
-    :attr _secure: class variable determines whether the HTTPS or the HTTP protocol should be used for requests made to the REST server. Defaults to ``True`` meaning HTTPS will be used.
-
-    :attr _host: is the hostname for the API endpoint for the :py:class:`Model` which is used in conjunction with the :py:attr:`_secure` property to generate a bound HTTP request factory at the time of class definition. See :py:class:`ModelBase` for implementation.
-
-    :attr _path: is the path to be used while fetching the instance from the server. It is a format string using the new format notation defined for str.format method. The primary key will be passed under the same name defined in the :py:attr:`_pk` property and any other named parameters passed to the :py:class:`Model`.get method or the class constructor are available to this string for formatting.
-
-    :attr _continuator: is a class method which receives the class object (like a regular class method) and the request made to the server. This method is expected to return a continuation URL for the fetched resource, if there is any (like the next page's URL for paginated content) and ``None`` otherwise. Defaults to a dummy function which always returns ``None``.
-
-    :attr _parser: is a class method which receives the class object and the body text of the server response to be parsed. It is expected to return a dictionary object having the properties of the related model. Defaults to a "staticazed" version of ``json.loads`` so it is not necessary to override it if the response type is valid JSON.
-
-    :attr_pk: is a class variable where the attribute name for the primary key of the :py:class:`Model` is stored as a string. This property is required and not providing a default is intentional to force developers to explicitly define it on every :py:class:`Model` class.
-
-    :attr _fetched: is an instance variable which is used to determine if the :py:class:`Model` instance is filled from the server or not. It can be modified for certain usages but this is not advised. If _fetched is ``False`` when an attribute not in the class dictionary tried to be accessed, the :py:meth:`__fetch` method is called before raising an :py:exc:`AttributeError`.
-
-    :attr _get_params: is an instance variable which holds the additional named get parameters provided to the :py:class:`Model`.get class method to fetch the instance. It is used internally by the relation classes to have more info about the current model instance while fetching its related resources.
+    inherited from. Uses :class:`ModelBase` as its metaclass for various
+    reasons explained in :class:`ModelBase`.
 
     """
+
     __metaclass__ = ModelBase
+
     _secure = True
-    _continuator = lambda x, y: None
+    """
+    The class variable that determines whether the HTTPS or the HTTP protocol
+    should be used for requests made to the REST server. Defaults to ``True``
+    meaning HTTPS will be used.
+
+    """
+
+    _host = None
+    """
+    The class variable that holds the hostname for the API endpoint for the
+    :class:`Model` which is used in conjunction with the :attr:`_secure`
+    attribute to generate a bound HTTP request factory at the time of class
+    creation. See :class:`ModelBase` for implementation.
+
+    """
+
+    _path = None
+    """
+    The class variable that holds the path to be used to fetch the instance
+    from the server. It is a format string using the new format notation
+    defined for :meth:`str.format`. The primary key will be passed under the
+    same name defined in the :attr:`_pk` property and any other named
+    parameters passed to the :meth:`Model.get` or the class constructor will be
+    available to this string for formatting.
+
+    """
+
+    _continuator = lambda x, y: None, None
+    """
+    The class method which receives the class object (like a regular class
+    method) and the request made to the server. This method is expected to
+    return a continuation URL for the fetched resource, if there is any (like
+    the next page's URL for paginated content) and ``None`` otherwise. Defaults
+    to a dummy function which always returns ``None, None``.
+
+    """
+
     _parser = staticmethod(json.loads)
+    """
+    The class method which receives the class object and the body text of the
+    server response to be parsed. It is expected to return a dictionary object
+    having the properties of the related model. Defaults to a "staticazed"
+    version of :func:``json.loads`` so it is not necessary to override it if
+    the response type is valid JSON.
+
+    """
+
+    _pk = None
+    """
+    The class variable where the attribute name for the primary key for the
+    :class:`Model` is stored as a string. This property is required and not
+    providing a default is intentional to force developers to explicitly define
+    it on every :class:`Model` class.
+
+    """
+
     _fetched = False
+    """
+    The instance variable which is used to determine if the :class:`Model`
+    instance is filled from the server or not. It can be modified for certain
+    usages but this is not suggested. If :attr:`_fetched` is ``False`` when an
+    attribute, that is not in the class dictionary, tried to be accessed, the
+    :meth:`__fetch` method is called before raising an :exc:`AttributeError`.
+
+    """
+
     _get_params = dict()
+    """
+    The instance variable which holds the additional named get parameters
+    provided to the :meth:`Model.get` to fetch the instance. It is used
+    internally by the :class:`Relation` classes to get more info about the
+    current :class:`Model` instance while fetching its related resources.
+
+    """
+
     __ids = None
 
     def __init__(self, **kwargs):
@@ -311,14 +391,16 @@ class Model(object):
         Constructor for model instances. All named parameters passed to this
         method are bound to the newly created instance. Any property names
         provided at this level which are interfering with the predefined class
-        relations (especially for Foreign fields) prepended "__" to avoid
-        conflicts and to be used by the related relation class. So for instance
-        if your class has "father = Foreign(Father)" and "father" is provided
-        at the level of instantiation, its value is saved under __father to be
-        used by the Foreign relationship class as the id of the foreign model.
+        relations (especially for :class:`Foreign` fields) are prepended "__"
+        to avoid conflicts and to be used by the related relation class. For
+        instance if your class has ``father = Foreign(Father)`` and ``father``
+        is provided to the constructor, its value is saved under __father to be
+        used by the :class:`Foreign` relationship class as the id of the
+        foreign :class:`Model`.
 
-        Constructor also tries to populate the _current_path instance variable
-        by formatting the Model._path using the properties provided.
+        Constructor also tries to populate the :attr:`Model._current_path`
+        instance variable by formatting :attr:`Model._path` using the arguments
+        provided.
 
         """
         self.__dict__.update(kwargs)
@@ -338,15 +420,15 @@ class Model(object):
 
     @property
     def _id(self):
-        """A property that returns the model instance's primary key value."""
+        """A property that returns the instance's primary key value."""
         return getattr(self, self._pk)
 
     @property
     def _parents(self):
         """
-        A property that returns a look-up dictionary for all parents of
-        the current instance. Uses lowercased class names for keys and the
-        instance references as the values.
+        A property that returns a look-up dictionary for all parents of the
+        current instance. Uses lower-cased class names for keys and the
+        instance references as their values.
 
         """
         if self.__ids is None:
@@ -363,18 +445,22 @@ class Model(object):
         """
         A method which handles all the heavy HTTP stuff by itself. This is
         actually a private method but to let the instances and derived classes
-        to call it, it is made `protected` using only a single `_`.
+        to call it, is made ``protected`` using only a single ``_`` prefix.
 
-        All other keyword arguments are passed to the HTTP request as
-        parameters such as method, url etc.
+        All undocumented keyword arguments are passed to the HTTP request as
+        keyword arguments such as method, url etc.
 
-        :param fetch_all: determines if the function should recursively fetch any "paginated" resource or simply return the downloaded and parsed data along with a continuation URL.
-
+        :param fetch_all: (optional) Determines if the function should
+                          recursively fetch any "paginated" resource or simply
+                          return the downloaded and parsed data along with a
+                          continuation URL.
         :type fetch_all: boolean
 
-        :returns: Returns a tuple where the first part is the parsed data from the server using ``cls._parser``, and the second half is any continuation URL for more of the same resource or ``None`` if there isn't any.
-
-        :rtype: tuple or ``None``
+        :returns: Returns a tuple where the first part is the parsed data from
+                  the server using :attr:`Model._parser`, and the second half
+                  is the continuation URL extracted using
+                  :attr:`Model._continuator` or ``None`` if there isn't any.
+        :rtype: tuple
 
         """
         conn = cls._get_connection()
@@ -448,13 +534,14 @@ class Model(object):
     @classmethod
     def get(cls, pk, **kwargs):
         """
-        A class method which fetches and instantinates the resource defined by
+        The class method that fetches and instantinates the resource defined by
         the provided pk value. Any other extra keyword arguments are used to
-        format the `cls._path` variable to construct the request URL.
+        format the :attr:`Model._path` variable to construct the request URL.
 
-        :param pk: is the primary key value for the requested resource.
+        :param pk: The primary key value for the requested resource.
+        :type pk: string
 
-        :rtype: ``None`` on server side errors such as a 404.
+        :rtype: Model or None
 
         """
         kwargs[cls._pk] = pk

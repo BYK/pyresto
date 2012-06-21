@@ -92,4 +92,4 @@ man_pages = [
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'http://docs.python.org/': None}
 
-autodoc_default_flags = 'members,private-members'
+autodoc_default_flags = 'members,private-members,show-inheritance'

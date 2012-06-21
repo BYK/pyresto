@@ -21,8 +21,6 @@ Documentation
 -------------
 
 .. toctree::
-    :maxdepth: 2
-
    tutorial
 
 API Documentation

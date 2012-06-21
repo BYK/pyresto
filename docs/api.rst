@@ -5,29 +5,32 @@ API
 
 .. module:: pyresto.core
 
-pyresto.core.ModelBase
-------------------
-
 .. autoclass:: ModelBase
-
-pyresto.core.Model
-------------------
 
 .. autoclass:: Model
     :exclude-members: _parser
 
     .. automethod:: __init__
 
-pyresto.core.Many
------------------
+    .. autoattribute:: _secure
+    .. autoattribute:: _host
+    .. autoattribute:: _path
+    .. autoattribute:: _continuator
+    .. autoattribute:: _parser
+    .. autoattribute:: _pk
+    .. autoattribute:: _fetched
+    .. autoattribute:: _get_params
 
+.. autoclass:: Relation
 .. autoclass:: Many
 
     .. automethod:: __init__
 
-pyresto.core.Foreign
---------------------
-
 .. autoclass:: Foreign
 
     .. automethod:: __init__
+
+.. autoclass:: WrappedList
+.. autoclass:: LazyList
+
+.. autoclass:: Error
