@@ -1,7 +1,7 @@
 Pyresto
 =======
 
-[![Travis CI](https://secure.travis-ci.org/berkerpeksag/pyresto.png)](http://travis-ci.org/berkerpeksag/pyresto)
+[![Travis CI](https://secure.travis-ci.org/BYK/pyresto.png)](http://travis-ci.org/BYK/pyresto)
 
 ```python
 import pyresto.apis.GitHub as GitHub
