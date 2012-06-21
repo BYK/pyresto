@@ -11,7 +11,6 @@ be useful when defining APIs.
 
 import re
 
-
 # An HTTP link header parser to be used in link_header_continuator
 link_header_regexp = re.compile(r'\<([^\>]+)\>;\srel="(\w+)"', re.I | re.U)
 
@@ -31,3 +30,17 @@ def link_header_continuator(cls, response):
     links = dict(((link_header_regexp.match(link.strip()).group(2, 1)
         for link in link_val.split(','))))
     return links.setdefault('next', None)
+
+
+class abstractclassmethod(classmethod):
+    """A decorator indicating abstract classmethods.
+
+    Similar to abstractmethod.
+
+    Taken from http://bugs.python.org/issue5867
+    """
+    __isabstractmethod__ = True
+
+    def __init__(self, callable):
+        callable.__isabstractmethod__ = True
+        super(abstractclassmethod, self).__init__(callable)

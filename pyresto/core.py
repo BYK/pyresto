@@ -17,6 +17,8 @@ try:
 except ImportError:
     import simplejson as json
 import logging
+from abc import ABCMeta, abstractproperty
+from .helpers import abstractclassmethod
 from urllib import quote
 
 
@@ -28,7 +30,7 @@ class Error(Exception):
     pass
 
 
-class ModelBase(type):
+class ModelBase(ABCMeta):
     """
     Meta class for :class:`Model` class. This class automagically creates the
     necessary :attr:`Model._path` class variable if it is not already
@@ -38,10 +40,10 @@ class ModelBase(type):
 
     """
 
-    def __new__(mcs, name, bases, attrs):
+    def __new__(mcls, name, bases, attrs):
         if name == 'Model':  # prevent infinite recursion
-            return super(ModelBase, mcs).__new__(mcs, name, bases, attrs)
-        new_class = type.__new__(mcs, name, bases, attrs)
+            return super(ModelBase, mcls).__new__(mcls, name, bases, attrs)
+        new_class = super(ModelBase, mcls).__new__(mcls, name, bases, attrs)
 
         if not hasattr(new_class, '_path'):  # don't override if defined
             new_class._path = u'/{0}/{{1:id}}'.format(quote(name.lower()))
@@ -337,15 +339,17 @@ class Model(object):
 
     """
 
-    _continuator = lambda x, y: None, None
-    """
-    The class method which receives the class object (like a regular class
-    method) and the request made to the server. This method is expected to
-    return a continuation URL for the fetched resource, if there is any (like
-    the next page's URL for paginated content) and ``None`` otherwise. Defaults
-    to a dummy function which always returns ``None, None``.
+    @abstractclassmethod
+    def _continuator(cls, response):
+        """
+        The class method which receives the response from the server. This
+        method is expected to return a continuation URL for the fetched
+        resource, if there is any (like the next page's URL for paginated
+        content) and ``None`` otherwise. Defaults to a dummy function which
+        always returns ``None, None``.
 
-    """
+        """
+        return None, None
 
     _parser = staticmethod(json.loads)
     """
@@ -357,14 +361,16 @@ class Model(object):
 
     """
 
-    _pk = None
-    """
-    The class variable where the attribute name for the primary key for the
-    :class:`Model` is stored as a string. This property is required and not
-    providing a default is intentional to force developers to explicitly define
-    it on every :class:`Model` class.
+    @abstractproperty
+    def _pk(self):
+        """
+        The class variable where the attribute name for the primary key for the
+        :class:`Model` is stored as a string. This property is required and not
+        providing a default is intentional to force developers to explicitly define
+        it on every :class:`Model` class.
 
-    """
+        """
+        pass
 
     _fetched = False
     """

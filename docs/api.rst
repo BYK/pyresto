@@ -21,7 +21,6 @@ pyresto.core.Model
     .. autoattribute:: _secure
     .. autoattribute:: _host
     .. autoattribute:: _path
-    .. autoattribute:: _continuator
     .. autoattribute:: _parser
     .. autoattribute:: _pk
     .. autoattribute:: _fetched
