@@ -154,11 +154,12 @@ class Many(Relation):
         :type path: string or None
 
         :param lazy: (optional) A boolean indicator to determine the type of
-                     the many field. Normally, it will be a :class:`WrappedList`
-                     which is essentially a list. Use ``lazy=True`` if the
-                     number of items in the collection will be uncertain or
-                     very large which will result in a :class:`LazyList`
-                     property which is practically a generator.
+                     the many field. Normally, it will be a
+                     :class:`WrappedList` which is essentially a list. Use
+                     ``lazy=True`` if the number of items in the collection
+                     will be uncertain or very large which will result in a
+                     :class:`LazyList` property which is practically a
+                     generator.
         :type lazy: boolean
 
         """
