@@ -156,7 +156,7 @@ class Many(Relation):
         :type path: string or None
 
         :param lazy: (optional) A boolean indicator to determine the type of
-                     the many field. Normally, it will be a
+                     the :class:`Many` field. Normally, it will be a
                      :class:`WrappedList` which is essentially a list. Use
                      ``lazy=True`` if the number of items in the collection
                      will be uncertain or very large which will result in a
@@ -197,12 +197,12 @@ class Many(Relation):
     def __make_fetcher(self, url):
         """
         A function factory method which creates a simple fetcher function for
-        the :class:`Many` relation, that is used by internally. The
+        the :class:`Many` relation, that is used internally. The
         :meth:`Model._rest_call` method defined on the models is expected to
         return the data and a continuation URL if there is any. This method
         generates a bound, fetcher function that calls the internal
         :meth:`Model._rest_call` function on the :class:`Model`, and processes
-        its results to confront the requirements explained above.
+        its results to satisfy the requirements explained above.
 
         :param url: The url which the fetcher function will be bound to.
         :type url: unicode

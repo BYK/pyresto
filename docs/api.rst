@@ -22,7 +22,6 @@ pyresto.core.Model
     .. autoattribute:: _host
     .. autoattribute:: _path
     .. autoattribute:: _parser
-    .. autoattribute:: _pk
     .. autoattribute:: _fetched
     .. autoattribute:: _get_params
 
