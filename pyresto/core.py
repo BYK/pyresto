@@ -41,9 +41,10 @@ class ModelBase(ABCMeta):
     """
 
     def __new__(mcls, name, bases, attrs):
-        if name == 'Model':  # prevent infinite recursion
-            return super(ModelBase, mcls).__new__(mcls, name, bases, attrs)
         new_class = super(ModelBase, mcls).__new__(mcls, name, bases, attrs)
+
+        if name == 'Model':  # prevent unnecessary base work
+            return new_class
 
         if not hasattr(new_class, '_path'):  # don't override if defined
             new_class._path = u'/{0}/{{1:id}}'.format(quote(name.lower()))
