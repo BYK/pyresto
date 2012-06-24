@@ -43,7 +43,7 @@ Note that we didn't define *any* attributes except for the mandatory ``_path``
 and ``_pk`` attributes since pyresto automatically fills all attributes
 provided by the server response. This inhibits any possible efforts to
 implement client side verification though since the server already verifies all
-the requests made to it, but allows much simpler code. This also makes the
+the requests made to it, and results in simpler code. This also makes the
 models "future-proof" and conforms to the best practices for "real" RESTful or
 Hypermedia APIs, which many recently started to use as a term instead of "real
 RESTful".
@@ -64,7 +64,7 @@ Note that we used the attribute name ``comments`` which will "shadow" any
 attribute named "comments" sent by the server as documented in
 :meth:`Model<.core.Model.__init__>`, so be wise when you are choosing your
 relation names and use the ones provided by the
-`service documentation <http://developer.github.com/v3/repos/commits/>` if
+`service documentation <http://developer.github.com/v3/repos/commits/>`_ if
 there are any.
 
 Note that we used the :class:`Many<.core.Many>` relation here. We provided the
