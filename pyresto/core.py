@@ -17,8 +17,8 @@ try:
 except ImportError:
     import simplejson as json
 import logging
+import re
 from abc import ABCMeta, abstractproperty
-from .helpers import abstractclassmethod
 from urllib import quote
 
 
@@ -340,17 +340,34 @@ class Model(object):
 
     """
 
-    @abstractclassmethod
-    def _continuator(cls, response):
+    @classmethod
+    def _continuator(cls, response,
+                     pattern=re.compile(r'\<([^\>]+)\>;\srel="(\w+)"',
+                                        re.I | re.U)):
         """
         The class method which receives the response from the server. This
         method is expected to return a continuation URL for the fetched
         resource, if there is any (like the next page's URL for paginated
-        content) and ``None`` otherwise. Defaults to a dummy function which
-        always returns ``None, None``.
+        content) and ``None`` otherwise. The default implementation  parses the
+        standard HTTP Link header and returns the url provided under the label
+        "next" for continuation and ``None`` if it cannot find this label.
+
+        :param response: The response for the HTTP request made to fetch the
+                         resources.
+        :type response: :class:`httplib.HTTPResponse`
+
+        :param pattern: (optional) The regular expression pattern to parse the
+                        link header in the respnose.
+        :type pattern: SRE_Pattern
 
         """
-        return None, None
+        link_val = response.getheader('Link', None)
+        if not link_val:
+            return
+
+        links = dict(((pattern.match(link.strip()).group(2, 1)
+            for link in link_val.split(','))))
+        return links.setdefault('next', None)
 
     _parser = staticmethod(json.loads)
     """
@@ -367,8 +384,8 @@ class Model(object):
         """
         The class variable where the attribute name for the primary key for the
         :class:`Model` is stored as a string. This property is required and not
-        providing a default is intentional to force developers to explicitly define
-        it on every :class:`Model` class.
+        providing a default is intentional to force developers to explicitly
+        define it on every :class:`Model` class.
 
         """
         pass
