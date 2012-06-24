@@ -69,19 +69,20 @@ there are any.
 
 Note that we used the :class:`Many<.core.Many>` relation here. We provided the
 model class itself, which will be the class of all the items in the collection
-and the path to fetch the collection. We used ``commit.url`` in the path format
-where ``commit`` will be the commit instance we are bound to, or to be clear,
-the commit "resource" which we are trying to get the comments of.
+and, the path to fetch the collection. We used ``commit.url`` in the path
+format where ``commit`` will be the commit instance we are bound to, or to be
+clear, the commit "resource" which we are trying to get the comments of.
 
 Since we don't expect many comments for a given commit, we used the default
-:class:`Many<.core.Many>` implementation which will result in a class which
-simply is a ``list`` derivative. This will cause a chain of requests when this
-attribute is first accessed until all the comments are fetched and no "next"
-link can be extracted from the ``Link`` header. See
-:meth:`Model._continuator<.core.Model._continuator>` for more info about this.
+:class:`Many<.core.Many>` implementation which will result in a
+:class:`WrappedList<.core.WrappedList>` instance that can be considered as a
+``list``. This will cause a chain of requests when this attribute is first
+accessed until all the comments are fetched and no "next" link can be extracted
+from the ``Link`` header. See
+:meth:`Model._continuator<.core.Model._continuator>` for more info on this.
 
-If we were expecting lots of items in the collection, or an unknown number of
-items in the collection, we could have used ``lazy=True`` like this::
+If we were expecting lots of items to be in the collection, or an unknown
+number of items in the collection, we could have used ``lazy=True`` like this::
 
     class Repo(GitHubModel):
         _path = '{user.url}/{name}'
@@ -92,11 +93,11 @@ items in the collection, we could have used ``lazy=True`` like this::
         branches = Many(Branch, '{repo.url}/branches?per_page=100')
 
 Using ``lazy=True`` will result in a :class:`LazyList<.core.LazyList>` type of
-field on the model when accessed which is basically a generator so you can
+field on the model when accessed, which is basically a generator. So you can
 iterate over it but you cannot directly access a specific element by index or
 get the total length of the collection.
 
-You can also use the :class:`Foreign<.core.Foreign>` relation to reference
+You can also use the :class:`Foreign<.core.Foreign>` relation to refer to
 other models::
 
     class Tag(GitHubModel):
@@ -104,14 +105,14 @@ other models::
         _pk = 'name'
         commit = Foreign(Commit)
 
-When used as its simples form, just like in the code above, this relation
+When used in its simplest form, just like in the code above, this relation
 expects the primary key value for the model it is referencing, ``Commit`` here,
 to be provided by the server under the **same** name. So we expect from GitHub
-API to provide the commit sha, which is the primary key for ``Commit`` models
-uner the label ``commit`` when we fetch the data for a ``Tag``. When this
+API to provide the commit sha, which is the primary key for ``Commit`` models,
+under the label ``commit`` when we fetch the data for a ``Tag``. When this
 property is accessed, a simple :meth:`Model.get<.core.Model.get>` call is made
-on the ``Commit`` model, which fetches all the data associated with the commit
-whose SHA hash is provided.
+on the ``Commit`` model, which fetches all the data associated with the it and
+puts them into a newly created model instance.
 
 
 Late Bindings
