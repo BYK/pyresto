@@ -338,9 +338,7 @@ class Model(object):
     """
 
     @classmethod
-    def _continuator(cls, response,
-                     pattern=re.compile(r'\<([^\>]+)\>;\srel="(\w+)"',
-                                        re.I | re.U)):
+    def _continuator(cls, response, pattern=r'\<([^\>]+)\>;\srel="(\w+)"'):
         """
         The class method which receives the response from the server. This
         method is expected to return a continuation URL for the fetched
@@ -354,16 +352,18 @@ class Model(object):
         :type response: :class:`httplib.HTTPResponse`
 
         :param pattern: (optional) The regular expression pattern to parse the
-                        link header in the respnose.
-        :type pattern: SRE_Pattern
+                        link header in the respnose. re.I and re.U flags are
+                        hard-coded due to the nature of HTTP responses.
+        :type pattern: string
 
         """
         link_val = response.getheader('Link', None)
         if not link_val:
             return
 
-        links = dict(((pattern.match(link.strip()).group(2, 1)
-            for link in link_val.split(','))))
+        links = dict(re.match(pattern, link.strip(), re.I | re.U).group(2, 1)
+                         for link in link_val.split(','))
+
         return links.setdefault('next', None)
 
     _parser = staticmethod(json.loads)
