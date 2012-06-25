@@ -7,10 +7,8 @@ class GitHubModel(Model):
     _host = 'api.github.com'
 
     def __repr__(self):
-        if self.url:
-            descriptor = self.url
-        else:
-            descriptor = ' - {0}: {1}'.format(self._pk, self._id)
+        descriptor = getattr(self, "url",
+                             '`{0}`: {1}'.format(self._pk, self._id))
 
         return '<GitHub.{0} [{1}]>'.format(self.__class__.__name__, descriptor)
 
