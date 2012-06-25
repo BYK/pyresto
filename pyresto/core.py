@@ -374,7 +374,7 @@ class Model(object):
     The class method which receives the class object and the body text of the
     server response to be parsed. It is expected to return a dictionary object
     having the properties of the related model. Defaults to a "staticazed"
-    version of :func:``json.loads`` so it is not necessary to override it if
+    version of :func:`json.loads` so it is not necessary to override it if
     the response type is valid JSON.
 
     """
