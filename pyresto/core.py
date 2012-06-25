@@ -49,7 +49,7 @@ class ModelBase(ABCMeta):
         if not hasattr(new_class, '_path'):  # don't override if defined
             new_class._path = u'/{0}/{{1:id}}'.format(quote(name.lower()))
         else:  # otherwise make sure _path is a unicode instance
-            new_class._path = unicode(new_class._path)
+            new_class._path = new_class._path and unicode(new_class._path)
 
         if new_class._secure:
             conn_class = httplib.HTTPSConnection
