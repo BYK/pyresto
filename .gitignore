@@ -7,11 +7,15 @@
 docs/_build/
 *.egg-info
 dist/
+build/
 # Virtualenv
 bin/
 help/
 include/
 lib/
+Include/
+Lib/
+Scripts/
 man/
 # Test purposes
 playground.py
