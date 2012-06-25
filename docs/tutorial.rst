@@ -128,3 +128,4 @@ For those cases, you can simply late bind the relations as follows::
     Repo.watcher_list = Many(User, '{repo.url}/watchers?per_page=100')
     User.follower_list = Many(User, '{user.url}/followers?per_page=100')
     User.watched = Many(Repo, '{user.url}/watched?per_page=100')
+
