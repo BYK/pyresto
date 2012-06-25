@@ -14,29 +14,20 @@ The Base
 
 Start off by creating a base model class for the service you are using which
 will hold the common values such as the API host, the common model
-representation using ``__repr__`` etc::
+representation using ``__repr__`` etc:
 
-    class GitHubModel(Model):
-        _host = 'api.github.com'
-
-        def __repr__(self):
-            if self.url:
-                descriptor = self.url
-            else:
-                descriptor = ' - {0}: {1}'.format(self._pk, self._id)
-
-            return '<GitHub.{0} [{1}]>'.format(self.__class__.__name__, descriptor)
+.. literalinclude:: ../pyresto/apis/GitHub.py
+    :lines: 6-15
 
 
 Simple Models
 -------------
 
 Then continue with implementing simple models which does not refer to any other
-model, such as the ``Comment`` model for GitHub::
+model, such as the ``Comment`` model for GitHub:
 
-    class Comment(GitHubModel):
-        _path = '{repo.url}/comments/{id}'
-        _pk = 'id'
+.. literalinclude:: ../pyresto/apis/GitHub.py
+    :lines: 18-20
 
 
 Note that we didn't define *any* attributes except for the mandatory ``_path``
@@ -53,12 +44,10 @@ Relations
 ---------
 
 After defining some "simple" models, you can start implementing models having
-relations with each other::
+relations with each other:
 
-    class Commit(GitHubModel):
-        _path = '{repo.url}/commits/{sha}'
-        _pk = 'sha'
-        comments = Many(Comment, '{commit.url}/comments?per_page=100')
+.. literalinclude:: ../pyresto/apis/GitHub.py
+    :lines: 23-26
 
 Note that we used the attribute name ``comments`` which will "shadow" any
 attribute named "comments" sent by the server as documented in
@@ -82,15 +71,10 @@ from the ``Link`` header. See
 :meth:`Model._continuator<.core.Model._continuator>` for more info on this.
 
 If we were expecting lots of items to be in the collection, or an unknown
-number of items in the collection, we could have used ``lazy=True`` like this::
+number of items in the collection, we could have used ``lazy=True`` like this:
 
-    class Repo(GitHubModel):
-        _path = '{user.url}/{name}'
-        _pk = 'name'
-        commits = Many(Commit, '{repo.url}/commits?per_page=100', lazy=True)
-        comments = Many(Comment, '{repo.url}/comments?per_page=100')
-        tags = Many(Tag, '{repo.url}/tags?per_page=100')
-        branches = Many(Branch, '{repo.url}/branches?per_page=100')
+.. literalinclude:: ../pyresto/apis/GitHub.py
+    :lines: 43-49
 
 Using ``lazy=True`` will result in a :class:`LazyList<.core.LazyList>` type of
 field on the model when accessed, which is basically a generator. So you can
@@ -98,12 +82,10 @@ iterate over it but you cannot directly access a specific element by index or
 get the total length of the collection.
 
 You can also use the :class:`Foreign<.core.Foreign>` relation to refer to
-other models::
+other models:
 
-    class Tag(GitHubModel):
-        _path = None
-        _pk = 'name'
-        commit = Foreign(Commit)
+.. literalinclude:: ../pyresto/apis/GitHub.py
+    :lines: 37-40
 
 When used in its simplest form, just like in the code above, this relation
 expects the primary key value for the model it is referencing, ``Commit`` here,
@@ -120,12 +102,8 @@ Late Bindings
 
 Since all relation types expect the class object itself for relations, it is
 not always possible to put all relation definitons inside the class definition.
-For those cases, you can simply late bind the relations as follows::
+For those cases, you can simply late bind the relations as follows:
 
-    # Late bindings due to circular references
-    Repo.contributors = Many(User, '{repo.url}/contributors?per_page=100')
-    Repo.owner = Foreign(User, 'owner')
-    Repo.watcher_list = Many(User, '{repo.url}/watchers?per_page=100')
-    User.follower_list = Many(User, '{user.url}/followers?per_page=100')
-    User.watched = Many(Repo, '{user.url}/watched?per_page=100')
+.. literalinclude:: ../pyresto/apis/GitHub.py
+    :lines: 58-63
 
