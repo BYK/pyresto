@@ -166,6 +166,7 @@ class Many(Relation):
         :type lazy: boolean
 
         """
+
         self.__model = model
         self.__path = unicode(path) or model._path  # ensure unicode
         self.__lazy = lazy
@@ -182,6 +183,7 @@ class Many(Relation):
         :type owner: Model
 
         """
+
         def mapper(data):
             if isinstance(data, dict):
                 instance = self.__model(**data)
@@ -276,6 +278,7 @@ class Foreign(Relation):
         :type key_extractor: function(model)
 
         """
+
         self.__model = model
         if not key_property:
             key_property = model.__name__.lower()
@@ -309,33 +312,24 @@ class Model(object):
 
     __metaclass__ = ModelBase
 
+    #: The class variable that determines whether the HTTPS or the HTTP protocol
+    #: should be used for requests made to the REST server. Defaults to ``True``
+    #: meaning HTTPS will be used.
     _secure = True
-    """
-    The class variable that determines whether the HTTPS or the HTTP protocol
-    should be used for requests made to the REST server. Defaults to ``True``
-    meaning HTTPS will be used.
 
-    """
-
+    #: The class variable that holds the hostname for the API endpoint for the
+    #: :class:`Model` which is used in conjunction with the :attr:`_secure`
+    #: attribute to generate a bound HTTP request factory at the time of class
+    #: creation. See :class:`ModelBase` for implementation.
     _host = None
-    """
-    The class variable that holds the hostname for the API endpoint for the
-    :class:`Model` which is used in conjunction with the :attr:`_secure`
-    attribute to generate a bound HTTP request factory at the time of class
-    creation. See :class:`ModelBase` for implementation.
 
-    """
-
+    #: The class variable that holds the path to be used to fetch the instance
+    #: from the server. It is a format string using the new format notation
+    #: defined for :meth:`str.format`. The primary key will be passed under the
+    #: same name defined in the :attr:`_pk` property and any other named
+    #: parameters passed to the :meth:`Model.get` or the class constructor will be
+    #: available to this string for formatting.
     _path = None
-    """
-    The class variable that holds the path to be used to fetch the instance
-    from the server. It is a format string using the new format notation
-    defined for :meth:`str.format`. The primary key will be passed under the
-    same name defined in the :attr:`_pk` property and any other named
-    parameters passed to the :meth:`Model.get` or the class constructor will be
-    available to this string for formatting.
-
-    """
 
     @classmethod
     def _continuator(cls, response, pattern=r'\<([^\>]+)\>;\srel="(\w+)"'):
@@ -357,6 +351,7 @@ class Model(object):
         :type pattern: string
 
         """
+
         link_val = response.getheader('Link', None)
         if not link_val:
             return
@@ -366,15 +361,12 @@ class Model(object):
 
         return links.setdefault('next', None)
 
+    #: The class method which receives the class object and the body text of the
+    #: server response to be parsed. It is expected to return a dictionary object
+    #: having the properties of the related model. Defaults to a "staticazed"
+    #: version of :func:`json.loads` so it is not necessary to override it if
+    #: the response type is valid JSON.
     _parser = staticmethod(json.loads)
-    """
-    The class method which receives the class object and the body text of the
-    server response to be parsed. It is expected to return a dictionary object
-    having the properties of the related model. Defaults to a "staticazed"
-    version of :func:`json.loads` so it is not necessary to override it if
-    the response type is valid JSON.
-
-    """
 
     @abstractproperty
     def _pk(self):
@@ -387,24 +379,18 @@ class Model(object):
         """
         pass
 
+    #: The instance variable which is used to determine if the :class:`Model`
+    #: instance is filled from the server or not. It can be modified for certain
+    #: usages but this is not suggested. If :attr:`_fetched` is ``False`` when an
+    #: attribute, that is not in the class dictionary, tried to be accessed, the
+    #: :meth:`__fetch` method is called before raising an :exc:`AttributeError`.
     _fetched = False
-    """
-    The instance variable which is used to determine if the :class:`Model`
-    instance is filled from the server or not. It can be modified for certain
-    usages but this is not suggested. If :attr:`_fetched` is ``False`` when an
-    attribute, that is not in the class dictionary, tried to be accessed, the
-    :meth:`__fetch` method is called before raising an :exc:`AttributeError`.
 
-    """
-
+    #: The instance variable which holds the additional named get parameters
+    #: provided to the :meth:`Model.get` to fetch the instance. It is used
+    #: internally by the :class:`Relation` classes to get more info about the
+    #: current :class:`Model` instance while fetching its related resources.
     _get_params = dict()
-    """
-    The instance variable which holds the additional named get parameters
-    provided to the :meth:`Model.get` to fetch the instance. It is used
-    internally by the :class:`Relation` classes to get more info about the
-    current :class:`Model` instance while fetching its related resources.
-
-    """
 
     __ids = None
 
@@ -425,6 +411,7 @@ class Model(object):
         provided.
 
         """
+
         self.__dict__.update(kwargs)
 
         cls = self.__class__
@@ -453,6 +440,7 @@ class Model(object):
         instance references as their values.
 
         """
+
         if self.__ids is None:
             self.__ids = dict()
             owner = self
@@ -485,6 +473,7 @@ class Model(object):
         :rtype: tuple
 
         """
+
         conn = cls._get_connection()
         response = None
         try:
@@ -566,6 +555,7 @@ class Model(object):
         :rtype: Model or None
 
         """
+
         kwargs[cls._pk] = pk
         path = cls._path.format(**kwargs)
         data = cls._rest_call(method='GET', url=path)[0]
