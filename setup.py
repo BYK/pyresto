@@ -33,10 +33,15 @@ setup(
     ],
     license='Mozilla Public License, v. 2.0',
     classifiers=(
+        'Development Status :: 4 - Beta',
+        'Environment :: Web Environment',
+        'License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)',
+        'Operating System :: OS Independent',
         'Natural Language :: English',
         'Intended Audience :: Developers',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
+        'Topic :: Software Development :: Libraries'
     ),
 )
