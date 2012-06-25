@@ -185,9 +185,6 @@ class Many(Relation):
         def mapper(data):
             if isinstance(data, dict):
                 instance = self.__model(**data)
-                # set auto fetching true for man fields
-                # which usually contain a summary
-                instance._auto_fetch = True
                 instance._pyresto_owner = owner
                 return instance
             elif isinstance(data, self.__model):
