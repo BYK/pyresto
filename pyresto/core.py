@@ -9,9 +9,8 @@ classes.
 
 """
 
+import collections
 import httplib
-
-
 try:
     import json
 except ImportError:
@@ -495,6 +494,7 @@ class Model(object):
             else:
                 raise e
 
+        result = collections.namedtuple('result', 'data continuation_url')
         if 200 <= response.status < 300:
             continuation_url = cls._continuator(response)
             encoding = response.getheader('content-type', '').split('charset=')
@@ -505,10 +505,10 @@ class Model(object):
                 logging.debug('Found more at: %s', continuation_url)
                 if fetch_all:
                     kwargs['url'] = continuation_url
-                    data += cls._rest_call(**kwargs)[0]
+                    data += cls._rest_call(**kwargs).data
                 else:
-                    return data, continuation_url
-            return data, None
+                    return result(data, continuation_url)
+            return result(data, None)
         else:
             conn.close()
             logging.error('URL returned HTTP %d: %s', response.status, kwargs)
@@ -564,7 +564,7 @@ class Model(object):
 
         kwargs[cls._pk] = pk
         path = cls._path.format(**kwargs)
-        data = cls._rest_call(method='GET', url=path)[0]
+        data = cls._rest_call(method='GET', url=path).data
 
         if not data:
             return
