@@ -16,7 +16,7 @@ Start off by creating a base model class for the service you are using which
 will hold the common values such as the API host, the common model
 representation using ``__repr__`` etc:
 
-.. literalinclude:: ../pyresto/apis/GitHub.py
+.. literalinclude:: ../pyresto/apis/github/__init__.py
     :lines: 6-13
 
 
@@ -26,7 +26,7 @@ Simple Models
 Then continue with implementing simple models which does not refer to any other
 model, such as the ``Comment`` model for GitHub:
 
-.. literalinclude:: ../pyresto/apis/GitHub.py
+.. literalinclude:: ../pyresto/apis/github/__init__.py
     :lines: 16-18
 
 
@@ -46,7 +46,7 @@ Relations
 After defining some "simple" models, you can start implementing models having
 relations with each other:
 
-.. literalinclude:: ../pyresto/apis/GitHub.py
+.. literalinclude:: ../pyresto/github/__init__.py
     :lines: 21-24
 
 Note that we used the attribute name ``comments`` which will "shadow" any
@@ -73,7 +73,7 @@ from the ``Link`` header. See
 If we were expecting lots of items to be in the collection, or an unknown
 number of items in the collection, we could have used ``lazy=True`` like this:
 
-.. literalinclude:: ../pyresto/apis/GitHub.py
+.. literalinclude:: ../pyresto/apis/github/__init__.py
     :lines: 41-47
 
 Using ``lazy=True`` will result in a :class:`LazyList<.core.LazyList>` type of
@@ -84,7 +84,7 @@ get the total length of the collection.
 You can also use the :class:`Foreign<.core.Foreign>` relation to refer to
 other models:
 
-.. literalinclude:: ../pyresto/apis/GitHub.py
+.. literalinclude:: ../pyresto/apis/github/__init__.py
     :lines: 35-38
 
 When used in its simplest form, just like in the code above, this relation
@@ -104,6 +104,6 @@ Since all relation types expect the class object itself for relations, it is
 not always possible to put all relation definitons inside the class definition.
 For those cases, you can simply late bind the relations as follows:
 
-.. literalinclude:: ../pyresto/apis/GitHub.py
+.. literalinclude:: ../pyresto/apis/github/__init__.py
     :lines: 56-61
 

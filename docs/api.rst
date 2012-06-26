@@ -54,7 +54,7 @@ pyresto.core.LazyList
 
 .. autoclass:: LazyList
 
-pyresto.core.Error
-------------------
+pyresto.core.PyrestoServerResponseException
+-------------------------------------------
 
-.. autoclass:: Error
+.. autoclass:: PyrestoServerResponseException
