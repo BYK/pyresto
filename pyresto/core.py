@@ -25,7 +25,7 @@ from urllib import quote
 __all__ = ('Error', 'Model', 'Many', 'Foreign')
 
 
-class Error(Exception):
+class PyrestoServerResponseException(Exception):
     """Base error class for pyresto."""
     pass
 
@@ -506,8 +506,8 @@ class Model(object):
         else:
             conn.close()
             logging.error('URL returned HTTP %d: %s', response.status, kwargs)
-            raise Error('Server response not OK. Response code: %d' %
-                        response.status)
+            raise PyrestoServerResponseException('Server response not OK. '
+                'Response code: {0:d}'.format(response.status))
 
     def __fetch(self):
         # if we don't have a path then we cannot fetch anything since we don't
