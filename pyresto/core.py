@@ -317,9 +317,9 @@ class Model(object):
 
     __metaclass__ = ModelBase
 
-    #: The class variable that determines whether the HTTPS or the HTTP protocol
-    #: should be used for requests made to the REST server. Defaults to ``True``
-    #: meaning HTTPS will be used.
+    #: The class variable that determines whether the HTTPS or the HTTP
+    #: protocol should be used for requests made to the REST server. Defaults
+    #: to ``True`` : meaning HTTPS will be used.
     _secure = True
 
     #: The class variable that holds the hostname for the API endpoint for the
@@ -332,8 +332,8 @@ class Model(object):
     #: from the server. It is a format string using the new format notation
     #: defined for :meth:`str.format`. The primary key will be passed under the
     #: same name defined in the :attr:`_pk` property and any other named
-    #: parameters passed to the :meth:`Model.get` or the class constructor will be
-    #: available to this string for formatting.
+    #: parameters passed to the :meth:`Model.get` or the class constructor will
+    #: be available to this string for formatting.
     _path = None
 
     @classmethod
@@ -366,11 +366,11 @@ class Model(object):
 
         return links.setdefault('next', None)
 
-    #: The class method which receives the class object and the body text of the
-    #: server response to be parsed. It is expected to return a dictionary object
-    #: having the properties of the related model. Defaults to a "staticazed"
-    #: version of :func:`json.loads` so it is not necessary to override it if
-    #: the response type is valid JSON.
+    #: The class method which receives the class object and the body text of
+    #: the : server response to be parsed. It is expected to return a
+    #: dictionary object having the properties of the related model. Defaults
+    #: to a "staticazed" version of :func:`json.loads` so it is not necessary
+    #: to override it if the response type is valid JSON.
     _parser = staticmethod(json.loads)
 
     @abstractproperty
@@ -385,10 +385,11 @@ class Model(object):
         pass
 
     #: The instance variable which is used to determine if the :class:`Model`
-    #: instance is filled from the server or not. It can be modified for certain
-    #: usages but this is not suggested. If :attr:`_fetched` is ``False`` when an
-    #: attribute, that is not in the class dictionary, tried to be accessed, the
-    #: :meth:`__fetch` method is called before raising an :exc:`AttributeError`.
+    #: instance is filled from the server or not. It can be modified for
+    #: certain usages but this is not suggested. If :attr:`_fetched` is
+    #: ``False`` when an attribute, that is not in the class dictionary, tried
+    #: to be accessed, the :meth:`__fetch` method is called before raising an
+    #: :exc:`AttributeError`.
     _fetched = False
 
     #: The instance variable which holds the additional named get parameters
