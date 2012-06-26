@@ -25,8 +25,13 @@ from urllib import quote
 __all__ = ('Error', 'Model', 'Many', 'Foreign')
 
 
-class PyrestoServerResponseException(Exception):
+class PyrestoException(Exception):
     """Base error class for pyresto."""
+    pass
+
+
+class PyrestoServerResponseException(PyrestoException):
+    """Server response error class for pyresto."""
     pass
 
 
