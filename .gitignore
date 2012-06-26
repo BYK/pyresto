@@ -20,3 +20,6 @@ man/
 # Test purposes
 playground.py
 .tox
+local/
+share/
+test.py
