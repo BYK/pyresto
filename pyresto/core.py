@@ -26,12 +26,10 @@ __all__ = ('Error', 'Model', 'Many', 'Foreign')
 
 class PyrestoException(Exception):
     """Base error class for pyresto."""
-    pass
 
 
 class PyrestoServerResponseException(PyrestoException):
     """Server response error class for pyresto."""
-    pass
 
 
 class ModelBase(ABCMeta):
@@ -137,7 +135,6 @@ class LazyList(object):
 
 class Relation(object):
     """Base class for all relation types."""
-    pass
 
 
 class Many(Relation):
@@ -381,7 +378,6 @@ class Model(object):
         define it on every :class:`Model` class.
 
         """
-        pass
 
     #: The instance variable which is used to determine if the :class:`Model`
     #: instance is filled from the server or not. It can be modified for
