@@ -339,7 +339,7 @@ class Model(object):
         method is expected to return a continuation URL for the fetched
         resource, if there is any (like the next page's URL for paginated
         content) and ``None`` otherwise. The default implementation  parses the
-        standard HTTP Link header and returns the url provided under the label
+        standard HTTP link header and returns the url provided under the label
         "next" for continuation and ``None`` if it cannot find this label.
 
         :param response: The response for the HTTP request made to fetch the
@@ -347,8 +347,9 @@ class Model(object):
         :type response: :class:`httplib.HTTPResponse`
 
         :param pattern: (optional) The regular expression pattern to parse the
-                        link header in the respnose. re.I and re.U flags are
-                        hard-coded due to the nature of HTTP responses.
+                        link header in the response. :data:`re.I` and
+                        :data:`re.U` flags are hard-coded due to the nature
+                        of HTTP responses.
         :type pattern: string
 
         """
@@ -363,7 +364,7 @@ class Model(object):
         return links.setdefault('next', None)
 
     #: The class method which receives the class object and the body text of
-    #: the : server response to be parsed. It is expected to return a
+    #: the server response to be parsed. It is expected to return a
     #: dictionary object having the properties of the related model. Defaults
     #: to a "staticazed" version of :func:`json.loads` so it is not necessary
     #: to override it if the response type is valid JSON.
@@ -403,7 +404,7 @@ class Model(object):
         relations (especially for :class:`Foreign` fields) are prepended "__"
         to avoid conflicts and to be used by the related relation class. For
         instance if your class has ``father = Foreign(Father)`` and ``father``
-        is provided to the constructor, its value is saved under __father to be
+        is provided to the constructor, its value is saved under ``__father`` to be
         used by the :class:`Foreign` relationship class as the id of the
         foreign :class:`Model`.
 
