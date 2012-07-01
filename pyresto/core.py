@@ -547,7 +547,7 @@ class Model(object):
     @classmethod
     def get(cls, pk, **kwargs):
         """
-        The class method that fetches and instantinates the resource defined by
+        The class method that fetches and instantiates the resource defined by
         the provided pk value. Any other extra keyword arguments are used to
         format the :attr:`Model._path` variable to construct the request URL.
 
