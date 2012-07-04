@@ -5,7 +5,7 @@ init:
 	pip install -r requirements.txt
 
 test:
-	nosetests -v tests/*
+	python -m unittest discover
 
 docs:
 	cd docs; make html
