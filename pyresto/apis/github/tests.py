@@ -31,7 +31,6 @@ class GitHubTestCase(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        #cls.cleanup_modules()
         cls.httplib.restore('pyresto.httplib')
         del cls.api
 
