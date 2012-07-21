@@ -475,7 +475,7 @@ class Model(object):
         if method == "GET":
             response = requests.get(url)
         elif method == "POST":
-            response = request.post(url)
+            response = requests.post(url)
         else:
             raise(Exception("HTTP method not implemented yet"))
 
