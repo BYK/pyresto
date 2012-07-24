@@ -467,7 +467,7 @@ class Model(object):
         """
 
         #WARNING: Requests library doesn't support unknown or wrong protocol
-        #         response exceptions. 
+        #         response exceptions.
         #         try this to repeat error:
         #         requests.get("http://bdgn.net:22")
         if "://" not in url:
@@ -477,7 +477,7 @@ class Model(object):
         elif method == "POST":
             response = requests.post(url)
         else:
-            raise(Exception("HTTP method not implemented yet"))
+            raise NotImplementedError('"{0:s}" method not implemented yet.'.format(method))
 
         result = collections.namedtuple('result', 'data continuation_url')
         if 200 <= response.status_code < 300:
