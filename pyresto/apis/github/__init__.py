@@ -4,7 +4,7 @@ from ...core import Foreign, Many, Model
 
 
 class GitHubModel(Model):
-    _host = 'api.github.com'
+    _url_base = 'https://api.github.com'
 
     def __repr__(self):
         descriptor = getattr(self, "url",

@@ -10,7 +10,7 @@ classes.
 """
 
 import collections
-import httplib
+import requests
 try:
     import json
 except ImportError:
@@ -53,11 +53,6 @@ class ModelBase(ABCMeta):
         else:  # otherwise make sure _path is a unicode instance
             new_class._path = new_class._path and unicode(new_class._path)
 
-        if new_class._secure:
-            conn_class = httplib.HTTPSConnection
-        else:
-            conn_class = httplib.HTTPConnection
-        new_class._get_connection = classmethod(lambda c: conn_class(c._host))
 
         return new_class
 
@@ -211,8 +206,8 @@ class Many(Relation):
         """
 
         def fetcher():
-            data, new_url = self.__model._rest_call(method='GET',
-                                                    url=url,
+            data, new_url = self.__model._rest_call(url=url,
+                                                    method="GET",
                                                     fetch_all=False)
             # Note the fetch_all=False in the call above, since this method is
             # intended for iterative LazyList calls.
@@ -245,7 +240,7 @@ class Many(Relation):
                 self.__cache[instance] = LazyList(self._with_owner(instance),
                                                   self.__make_fetcher(path))
             else:
-                data, next_url = model._rest_call(method='GET', url=path)
+                data, next_url = model._rest_call(url=path, method="GET")
                 self.__cache[instance] =\
                         WrappedList(data or list(), self._with_owner(instance))
         return self.__cache[instance]
@@ -313,16 +308,11 @@ class Model(object):
 
     __metaclass__ = ModelBase
 
-    #: The class variable that determines whether the HTTPS or the HTTP
-    #: protocol should be used for requests made to the REST server. Defaults
-    #: to ``True`` : meaning HTTPS will be used.
-    _secure = True
-
     #: The class variable that holds the hostname for the API endpoint for the
     #: :class:`Model` which is used in conjunction with the :attr:`_secure`
     #: attribute to generate a bound HTTP request factory at the time of class
     #: creation. See :class:`ModelBase` for implementation.
-    _host = None
+    _url_base = None
 
     #: The class variable that holds the path to be used to fetch the instance
     #: from the server. It is a format string using the new format notation
@@ -354,7 +344,7 @@ class Model(object):
 
         """
 
-        link_val = response.getheader('Link', None)
+        link_val = response.headers.get('Link', None)
         if not link_val:
             return
 
@@ -453,7 +443,7 @@ class Model(object):
         return self.__ids
 
     @classmethod
-    def _rest_call(cls, fetch_all=True, **kwargs):
+    def _rest_call(cls, url, method="GET", fetch_all=True, **kwargs):
         """
         A method which handles all the heavy HTTP stuff by itself. This is
         actually a private method but to let the instances and derived classes
@@ -476,27 +466,21 @@ class Model(object):
 
         """
 
-        conn = cls._get_connection()
-        response = None
-        try:
-            conn.request(**kwargs)
-            response = conn.getresponse()
-        except Exception as e:
-            # should call conn.close() on any error
-            # to allow further calls to be made
-            conn.close()
-            if isinstance(e, httplib.BadStatusLine):
-                if not response:  # retry
-                    return cls._rest_call(fetch_all, **kwargs)
-            else:
-                raise e
+        #WARNING: Requests library doesn't support unknown or wrong protocol
+        #         response exceptions.
+        #         try this to repeat error:
+        #         requests.get("http://bdgn.net:22")
+        if "://" not in url:
+            url = cls._url_base + url
+        http_operation = getattr(requests, method.lower())
+        response = http_operation(url)
 
         result = collections.namedtuple('result', 'data continuation_url')
-        if 200 <= response.status < 300:
+        if 200 <= response.status_code < 300:
             continuation_url = cls._continuator(response)
-            encoding = response.getheader('content-type', '').split('charset=')
+            encoding = response.headers.get('content-type', '').split('charset=')
             encoding = encoding[1] if len(encoding) > 1 else 'utf-8'
-            response_data = unicode(response.read(), encoding, 'replace')
+            response_data = response.text
             data = cls._parser(response_data) if response_data else None
             if continuation_url:
                 logging.debug('Found more at: %s', continuation_url)
@@ -508,9 +492,9 @@ class Model(object):
             return result(data, None)
         else:
             conn.close()
-            logging.error('URL returned HTTP %d: %s', response.status, kwargs)
+            logging.error('URL returned HTTP %d: %s', response.status_code, kwargs)
             raise PyrestoServerResponseException('Server response not OK. '
-                'Response code: {0:d}'.format(response.status))
+                'Response code: {0:d}'.format(response.status_code))
 
     def __fetch(self):
         # if we don't have a path then we cannot fetch anything since we don't
@@ -519,7 +503,7 @@ class Model(object):
             self._fetched = True
             return
 
-        data, next_url = self._rest_call(method='GET', url=self._current_path)
+        data, next_url = self._rest_call(url=self._current_path, method="GET")
         if next_url:
             self._current_path = next_url
 
@@ -543,7 +527,7 @@ class Model(object):
             descriptor = ' - {0}: {1}'.format(self._pk, self._id)
 
         return '<Pyresto.Model.{0} [{1}{2}]>'.format(self.__class__.__name__,
-                                                     self._host, descriptor)
+                                                     self._url_base, descriptor)
 
     @classmethod
     def get(cls, pk, **kwargs):
@@ -561,7 +545,7 @@ class Model(object):
 
         kwargs[cls._pk] = pk
         path = cls._path.format(**kwargs)
-        data = cls._rest_call(method='GET', url=path).data
+        data = cls._rest_call(url=path, method="GET").data
 
         if not data:
             return
