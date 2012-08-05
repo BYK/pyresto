@@ -467,7 +467,7 @@ class Model(object):
         """
 
         #WARNING: Requests library doesn't support unknown or wrong protocol
-        #         response exceptions. 
+        #         response exceptions.
         #         try this to repeat error:
         #         requests.get("http://bdgn.net:22")
         if "://" not in url:
