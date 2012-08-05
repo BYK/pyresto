@@ -206,8 +206,8 @@ class Many(Relation):
         """
 
         def fetcher():
-            data, new_url = self.__model._rest_call(method='GET',
-                                                    url=url,
+            data, new_url = self.__model._rest_call(url=url,
+                                                    method="GET",
                                                     fetch_all=False)
             # Note the fetch_all=False in the call above, since this method is
             # intended for iterative LazyList calls.
@@ -240,7 +240,7 @@ class Many(Relation):
                 self.__cache[instance] = LazyList(self._with_owner(instance),
                                                   self.__make_fetcher(path))
             else:
-                data, next_url = model._rest_call(method='GET', url=path)
+                data, next_url = model._rest_call(url=path, method="GET")
                 self.__cache[instance] =\
                         WrappedList(data or list(), self._with_owner(instance))
         return self.__cache[instance]
@@ -312,7 +312,7 @@ class Model(object):
     #: :class:`Model` which is used in conjunction with the :attr:`_secure`
     #: attribute to generate a bound HTTP request factory at the time of class
     #: creation. See :class:`ModelBase` for implementation.
-    _host = None
+    _url_base = None
 
     #: The class variable that holds the path to be used to fetch the instance
     #: from the server. It is a format string using the new format notation
@@ -443,7 +443,7 @@ class Model(object):
         return self.__ids
 
     @classmethod
-    def _rest_call(cls, url, fetch_all=True, method="GET"):
+    def _rest_call(cls, url, method="GET", fetch_all=True, **kwargs):
         """
         A method which handles all the heavy HTTP stuff by itself. This is
         actually a private method but to let the instances and derived classes
@@ -471,7 +471,7 @@ class Model(object):
         #         try this to repeat error:
         #         requests.get("http://bdgn.net:22")
         if "://" not in url:
-            url = cls._host + url
+            url = cls._url_base + url
         if method == "GET":
             response = requests.get(url)
         elif method == "POST":
@@ -507,7 +507,7 @@ class Model(object):
             self._fetched = True
             return
 
-        data, next_url = self._rest_call(method='GET', url=self._current_path)
+        data, next_url = self._rest_call(url=self._current_path, method="GET")
         if next_url:
             self._current_path = next_url
 
@@ -531,7 +531,7 @@ class Model(object):
             descriptor = ' - {0}: {1}'.format(self._pk, self._id)
 
         return '<Pyresto.Model.{0} [{1}{2}]>'.format(self.__class__.__name__,
-                                                     self._host, descriptor)
+                                                     self._url_base, descriptor)
 
     @classmethod
     def get(cls, pk, **kwargs):
@@ -549,7 +549,7 @@ class Model(object):
 
         kwargs[cls._pk] = pk
         path = cls._path.format(**kwargs)
-        data = cls._rest_call(method='GET', url=path).data
+        data = cls._rest_call(url=path, method="GET").data
 
         if not data:
             return
