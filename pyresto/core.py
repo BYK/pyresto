@@ -472,12 +472,8 @@ class Model(object):
         #         requests.get("http://bdgn.net:22")
         if "://" not in url:
             url = cls._url_base + url
-        if method == "GET":
-            response = requests.get(url)
-        elif method == "POST":
-            response = request.post(url)
-        else:
-            raise(Exception("HTTP method not implemented yet"))
+        http_operation = getattr(requests, method.lower())
+        response = http_operation(url)
 
         result = collections.namedtuple('result', 'data continuation_url')
         if 200 <= response.status_code < 300:
