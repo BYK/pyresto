@@ -466,10 +466,6 @@ class Model(object):
 
         """
 
-        #WARNING: Requests library doesn't support unknown or wrong protocol
-        #         response exceptions.
-        #         try this to repeat error:
-        #         requests.get("http://bdgn.net:22")
         if "://" not in url:
             url = cls._url_base + url
         http_operation = getattr(requests, method.lower())
