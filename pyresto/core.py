@@ -10,13 +10,16 @@ classes.
 """
 
 import collections
-import requests
+import logging
 try:
     import json
 except ImportError:
     import simplejson as json
-import logging
 import re
+import urlparse
+
+import requests
+
 from abc import ABCMeta, abstractproperty
 from urllib import quote
 
@@ -48,8 +51,8 @@ class ModelBase(ABCMeta):
 
     """
 
-    def __new__(mcls, name, bases, attrs):
-        new_class = super(ModelBase, mcls).__new__(mcls, name, bases, attrs)
+    def __new__(mcs, name, bases, attrs):
+        new_class = super(ModelBase, mcs).__new__(mcs, name, bases, attrs)
 
         if name == 'Model':  # prevent unnecessary base work
             return new_class
@@ -243,7 +246,7 @@ class Many(Relation):
                 self.__cache[instance] = LazyList(self._with_owner(instance),
                                                   self.__make_fetcher(path))
             else:
-                data, next_url = model._rest_call(url=path, method="GET")
+                data, next_url = model._rest_call(url=path)
                 self.__cache[instance] =\
                         WrappedList(data or list(), self._with_owner(instance))
         return self.__cache[instance]
@@ -397,8 +400,8 @@ class Model(object):
         relations (especially for :class:`Foreign` fields) are prepended "__"
         to avoid conflicts and to be used by the related relation class. For
         instance if your class has ``father = Foreign(Father)`` and ``father``
-        is provided to the constructor, its value is saved under ``__father`` to be
-        used by the :class:`Foreign` relationship class as the id of the
+        is provided to the constructor, its value is saved under ``__father``
+        to be used by the :class:`Foreign` relationship class as the id of the
         foreign :class:`Model`.
 
         Constructor also tries to populate the :attr:`Model._current_path`
@@ -450,7 +453,7 @@ class Model(object):
         return urlparse.urljoin(cls._url_base, url)
 
     @classmethod
-    def _rest_call(cls, url, method="GET", fetch_all=True, **kwargs):
+    def _rest_call(cls, url, method='GET', fetch_all=True, **kwargs):
         """
         A method which handles all the heavy HTTP stuff by itself. This is
         actually a private method but to let the instances and derived classes
@@ -496,7 +499,8 @@ class Model(object):
                     return result(data, continuation_url)
             return result(data, None)
         else:
-            logging.error('URL returned HTTP %d: %s', response.status_code, kwargs)
+            logging.error('URL returned HTTP %d: %s', response.status_code,
+                kwargs)
             raise PyrestoServerResponseException('Server response not OK. '
                 'Response code: {0:d}'.format(response.status_code))
 
@@ -507,7 +511,7 @@ class Model(object):
             self._fetched = True
             return
 
-        data, next_url = self._rest_call(url=self._current_path, method="GET")
+        data, next_url = self._rest_call(url=self._current_path)
         if next_url:
             self._current_path = next_url
 
@@ -531,7 +535,8 @@ class Model(object):
             descriptor = ' - {0}: {1}'.format(self._pk, self._id)
 
         return '<Pyresto.Model.{0} [{1}{2}]>'.format(self.__class__.__name__,
-                                                     self._url_base, descriptor)
+                                                     self._url_base,
+                                                     descriptor)
 
     @classmethod
     def get(cls, pk, **kwargs):
@@ -549,7 +554,7 @@ class Model(object):
 
         kwargs[cls._pk] = pk
         path = cls._path.format(**kwargs)
-        data = cls._rest_call(url=path, method="GET").data
+        data = cls._rest_call(url=path).data
 
         if not data:
             return
