@@ -23,6 +23,8 @@ from urllib import quote
 
 __all__ = ('Error', 'Model', 'Many', 'Foreign')
 
+ALLOWED_HTTP_METHODS = frozenset(('GET', 'POST', 'PUT', 'DELETE', 'PATCH'))
+
 
 class PyrestoException(Exception):
     """Base error class for pyresto."""
@@ -30,6 +32,10 @@ class PyrestoException(Exception):
 
 class PyrestoServerResponseException(PyrestoException):
     """Server response error class for pyresto."""
+
+
+class PyrestoInvalidRestMethodException(PyrestoException, ValueError):
+    """A valid HTTP method is required to make a request."""
 
 
 class ModelBase(ABCMeta):
@@ -443,6 +449,10 @@ class Model(object):
         return self.__ids
 
     @classmethod
+    def _get_sanitized_url(cls, url):
+        return urlparse.urljoin(cls._url_base, url)
+
+    @classmethod
     def _rest_call(cls, url, method="GET", fetch_all=True, **kwargs):
         """
         A method which handles all the heavy HTTP stuff by itself. This is
@@ -466,10 +476,14 @@ class Model(object):
 
         """
 
-        if "://" not in url:
-            url = cls._url_base + url
-        http_operation = getattr(requests, method.lower())
-        response = http_operation(url)
+        url = cls._get_sanitized_url(url)
+        if method in ALLOWED_HTTP_METHODS:
+            response = requests.request(method.lower(), url)
+        else:
+            raise PyrestoInvalidRestMethodException(
+                'Invalid method "{0:s}" is used for the HTTP request. Can only'
+                'use the following: {1!s}'.format(method,
+                                                  ALLOWED_HTTP_METHODS))
 
         result = collections.namedtuple('result', 'data continuation_url')
         if 200 <= response.status_code < 300:
