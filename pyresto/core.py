@@ -56,9 +56,6 @@ class ModelBase(ABCMeta):
 
         if not hasattr(new_class, '_path'):  # don't override if defined
             new_class._path = u'/{0}/{{1:id}}'.format(quote(name.lower()))
-        else:  # otherwise make sure _path is a unicode instance
-            new_class._path = new_class._path and unicode(new_class._path)
-
 
         return new_class
 
@@ -488,8 +485,6 @@ class Model(object):
         result = collections.namedtuple('result', 'data continuation_url')
         if 200 <= response.status_code < 300:
             continuation_url = cls._continuator(response)
-            encoding = response.headers.get('content-type', '').split('charset=')
-            encoding = encoding[1] if len(encoding) > 1 else 'utf-8'
             response_data = response.text
             data = cls._parser(response_data) if response_data else None
             if continuation_url:
@@ -501,7 +496,6 @@ class Model(object):
                     return result(data, continuation_url)
             return result(data, None)
         else:
-            conn.close()
             logging.error('URL returned HTTP %d: %s', response.status_code, kwargs)
             raise PyrestoServerResponseException('Server response not OK. '
                 'Response code: {0:d}'.format(response.status_code))
