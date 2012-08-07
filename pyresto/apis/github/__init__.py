@@ -1,6 +1,7 @@
 # coding: utf-8
 
 from ...core import Foreign, Many, Model
+from requests.auth import HTTPBasicAuth
 
 
 class GitHubModel(Model):
@@ -38,6 +39,11 @@ class Tag(GitHubModel):
     commit = Foreign(Commit)
 
 
+class Key(GitHubModel):
+    _path = '{repo.url}/keys/{id}'
+    _pk = 'id'
+
+
 class Repo(GitHubModel):
     _path = '{user.url}/{name}'
     _pk = 'name'
@@ -45,12 +51,22 @@ class Repo(GitHubModel):
     comments = Many(Comment, '{repo.url}/comments?per_page=100')
     tags = Many(Tag, '{repo.url}/tags?per_page=100')
     branches = Many(Branch, '{repo.url}/branches?per_page=100')
+    keys = Many(Key, '{repo.url}/keys?per_page=100')
 
 
 class User(GitHubModel):
     _path = '/users/{login}'
     _pk = 'login'
     repos = Many(Repo, '{user.url}/repos?type=all&per_page=100')
+
+
+class Self(User):
+    _path = '/user'
+    repos = Many(Repo, '/user/repos?type=all&per_page=100')
+
+    @classmethod
+    def get(cls, **kwargs):
+        return super(Self, cls).get(None, **kwargs)
 
 
 # Late bindings due to circular references

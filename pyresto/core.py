@@ -20,7 +20,7 @@ import urlparse
 
 import requests
 
-from abc import ABCMeta, abstractproperty
+from abc import ABCMeta, abstractproperty, abstractmethod
 from urllib import quote
 
 
@@ -134,6 +134,14 @@ class LazyList(object):
                 yield self.__wrapper(item)
 
 
+class Auth(object):
+    __metaclass__ = ABCMeta
+
+    @abstractmethod
+    def __call__(self, r):
+        return r
+
+
 class Relation(object):
     """Base class for all relation types."""
 
@@ -196,7 +204,7 @@ class Many(Relation):
 
         return mapper
 
-    def __make_fetcher(self, url):
+    def __make_fetcher(self, url, instance):
         """
         A function factory method which creates a simple fetcher function for
         the :class:`Many` relation, that is used internally. The
@@ -213,14 +221,15 @@ class Many(Relation):
 
         def fetcher():
             data, new_url = self.__model._rest_call(url=url,
-                                                    method="GET",
+                                                    auth=instance._auth,
                                                     fetch_all=False)
             # Note the fetch_all=False in the call above, since this method is
             # intended for iterative LazyList calls.
             if not data:
                 data = list()
 
-            new_fetcher = self.__make_fetcher(new_url) if new_url else None
+            new_fetcher = self.__make_fetcher(new_url,
+                                              instance) if new_url else None
             return data, new_fetcher
 
         return fetcher
@@ -244,9 +253,11 @@ class Many(Relation):
 
             if self.__lazy:
                 self.__cache[instance] = LazyList(self._with_owner(instance),
-                                                  self.__make_fetcher(path))
+                                                  self.__make_fetcher(path,
+                                                                     instance))
             else:
-                data, next_url = model._rest_call(url=path)
+                data, next_url = model._rest_call(url=path,
+                                                  auth=instance._auth)
                 self.__cache[instance] =\
                         WrappedList(data or list(), self._with_owner(instance))
         return self.__cache[instance]
@@ -299,7 +310,8 @@ class Foreign(Relation):
             keys = instance._parents
             keys.update(self.__key_extractor(instance))
             pk = keys.pop(self.__model._pk)
-            self.__cache[instance] = self.__model.get(pk, **keys)
+            self.__cache[instance] = self.__model.get(pk, auth=instance._auth,
+                                                      **keys)
 
         return self.__cache[instance]
 
@@ -327,6 +339,8 @@ class Model(object):
     #: parameters passed to the :meth:`Model.get` or the class constructor will
     #: be available to this string for formatting.
     _path = None
+
+    _auth = None
 
     @classmethod
     def _continuator(cls, response, pattern=r'\<([^\>]+)\>;\srel="(\w+)"'):
@@ -477,8 +491,12 @@ class Model(object):
         """
 
         url = cls._get_sanitized_url(url)
+
+        if cls._auth is not None and 'auth' not in kwargs:
+            kwargs['auth'] = cls.auth
+
         if method in ALLOWED_HTTP_METHODS:
-            response = requests.request(method.lower(), url)
+            response = requests.request(method.lower(), url, **kwargs)
         else:
             raise PyrestoInvalidRestMethodException(
                 'Invalid method "{0:s}" is used for the HTTP request. Can only'
@@ -499,8 +517,8 @@ class Model(object):
                     return result(data, continuation_url)
             return result(data, None)
         else:
-            logging.error('URL returned HTTP %d: %s', response.status_code,
-                kwargs)
+            logging.error('%s returned HTTP %d: %s', url, response.status_code,
+                          kwargs)
             raise PyrestoServerResponseException('Server response not OK. '
                 'Response code: {0:d}'.format(response.status_code))
 
@@ -511,7 +529,8 @@ class Model(object):
             self._fetched = True
             return
 
-        data, next_url = self._rest_call(url=self._current_path)
+        data, next_url = self._rest_call(url=self._current_path,
+                                         auth=self._auth)
         if next_url:
             self._current_path = next_url
 
@@ -552,9 +571,10 @@ class Model(object):
 
         """
 
+        auth = kwargs.pop('auth', cls._auth)
         kwargs[cls._pk] = pk
         path = cls._path.format(**kwargs)
-        data = cls._rest_call(url=path).data
+        data = cls._rest_call(url=path, auth=auth).data
 
         if not data:
             return
@@ -562,4 +582,7 @@ class Model(object):
         instance = cls(**data)
         instance._get_params = kwargs
         instance._fetched = True
+        if auth:
+            instance._auth = auth
+
         return instance
