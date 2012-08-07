@@ -39,7 +39,7 @@ class Tag(GitHubModel):
 
 
 class Key(GitHubModel):
-    _path = '{repo.url}/keys/{id}'
+    _path = '/user/keys/{id}'
     _pk = 'id'
 
 
@@ -56,7 +56,9 @@ class Repo(GitHubModel):
 class User(GitHubModel):
     _path = '/users/{login}'
     _pk = 'login'
+
     repos = Many(Repo, '{user.url}/repos?type=all&per_page=100')
+    keys = Many(Key, '/user/keys?per_page=100')
 
 
 class Self(User):
