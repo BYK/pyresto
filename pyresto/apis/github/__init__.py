@@ -1,7 +1,6 @@
 # coding: utf-8
 
 from ...core import Foreign, Many, Model
-from requests.auth import HTTPBasicAuth
 
 
 class GitHubModel(Model):
