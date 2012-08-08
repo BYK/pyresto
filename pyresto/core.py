@@ -567,7 +567,8 @@ class Model(object):
             kwargs['auth'] = cls.auth
 
         if method in ALLOWED_HTTP_METHODS:
-            response = requests.request(method.lower(), url, **kwargs)
+            response = requests.request(method.lower(), url, verify=True,
+                                        **kwargs)
         else:
             raise PyrestoInvalidRestMethodException(
                 'Invalid method "{0:s}" is used for the HTTP request. Can only'
