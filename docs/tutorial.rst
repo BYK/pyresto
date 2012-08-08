@@ -46,7 +46,7 @@ Relations
 After defining some "simple" models, you can start implementing models having
 relations with each other:
 
-.. literalinclude:: ../pyresto/github/__init__.py
+.. literalinclude:: ../pyresto/apis/github/__init__.py
     :lines: 22-25
 
 Note that we used the attribute name ``comments`` which will "shadow" any
@@ -106,4 +106,32 @@ For those cases, you can simply late bind the relations as follows:
 
 .. literalinclude:: ../pyresto/apis/github/__init__.py
     :lines: 74-79
+
+
+Authentication
+--------------
+
+Most services require authentication even for only fetching data so providing
+means of authentication is essential. Define the possible authentication
+mechanisms for the service:
+
+.. literalinclude:: ../pyresto/apis/github/__init__.py
+    :lines: 4,81-82
+
+Make sure you use the provided authentication classes by :mod:`requests.auth`
+if they suit your needs. If you still need a custom authentication class, make
+sure you derive it from :class:`Auth<.core.Auth>`.
+
+After defining the authentication methods, create a module-global function that
+will set the default authentication method and credentials for all requests for
+convenience:
+
+.. literalinclude:: ../pyresto/apis/github/__init__.py
+    :lines: 84-85
+
+Above, we provide the list of methods/classes we have previously defined, the
+base class for our service since all other models inherit from that and will
+use the authentication defined on that, unless overridden. And we also set our
+default authentication mechanism to remove the burden from the shoulders of the
+users of our API library.
 
