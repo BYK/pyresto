@@ -1,6 +1,7 @@
 # coding: utf-8
 
-from ...core import Foreign, Many, Model
+from ...core import Foreign, Many, Model, AuthList, enable_auth
+from requests.auth import HTTPBasicAuth
 
 
 class GitHubModel(Model):
@@ -38,6 +39,11 @@ class Tag(GitHubModel):
     commit = Foreign(Commit)
 
 
+class Key(GitHubModel):
+    _path = '/user/keys/{id}'
+    _pk = 'id'
+
+
 class Repo(GitHubModel):
     _path = '{user.url}/{name}'
     _pk = 'name'
@@ -45,12 +51,24 @@ class Repo(GitHubModel):
     comments = Many(Comment, '{repo.url}/comments?per_page=100')
     tags = Many(Tag, '{repo.url}/tags?per_page=100')
     branches = Many(Branch, '{repo.url}/branches?per_page=100')
+    keys = Many(Key, '{repo.url}/keys?per_page=100')
 
 
 class User(GitHubModel):
     _path = '/users/{login}'
     _pk = 'login'
+
     repos = Many(Repo, '{user.url}/repos?type=all&per_page=100')
+    keys = Many(Key, '/user/keys?per_page=100')
+
+
+class Me(User):
+    _path = '/user'
+    repos = Many(Repo, '/user/repos?type=all&per_page=100')
+
+    @classmethod
+    def get(cls, **kwargs):
+        return super(Me, cls).get(None, **kwargs)
 
 
 # Late bindings due to circular references
@@ -59,3 +77,9 @@ Repo.owner = Foreign(User, 'owner')
 Repo.watcher_list = Many(User, '{repo.url}/watchers?per_page=100')
 User.follower_list = Many(User, '{user.url}/followers?per_page=100')
 User.watched = Many(Repo, '{user.url}/watched?per_page=100')
+
+# Define authentication methods
+auths = AuthList(basic=HTTPBasicAuth)
+
+# Enable and publish global authentication
+auth = enable_auth(auths, GitHubModel, 'basic')
