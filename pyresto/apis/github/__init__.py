@@ -4,17 +4,22 @@ from ...core import Foreign, Many, Model, Auth, PyrestoException
 from requests.auth import HTTPBasicAuth
 
 
-class BasicAuth(HTTPBasicAuth, Auth):
-    pass
+BasicAuth = HTTPBasicAuth
 
 
-def setDefaultAuth(type='basic', **kwargs):
+class GitHubInvalidAuthTypeException(PyrestoException):
+    """
+    Error class for exceptions thrown when an invalid auth type is used with
+    :func:`auth`
+    """
+
+def auth(type='basic', **kwargs):
     if type is None:
         GitHubModel._auth = None
         return
 
     if type != 'basic':
-        raise PyrestoException('Unsupported auth type.')
+        raise GitHubInvalidAuthTypeException('Unsupported auth type.')
 
     GitHubModel._auth = BasicAuth(**kwargs)
 
