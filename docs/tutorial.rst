@@ -6,7 +6,7 @@ Tutorial
 .. module:: pyresto
 
 Welcome to the pyresto tutorial. This tutorial will guide you about how the
-:mod:`apis.GitHub` module is implemented.
+:mod:`pyresto.apis.github` module is implemented.
 
 
 The Base
