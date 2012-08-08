@@ -1,0 +1,5 @@
+-r requirements.txt
+
+ipython==0.12.1
+nose==1.1.2
+tox==1.4
