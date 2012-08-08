@@ -134,7 +134,12 @@ class LazyList(object):
                 yield self.__wrapper(item)
 
 
-class Auth(object):
+class Auth(requests.auth.AuthBase):
+    """
+    Abstract base class for all custom authentication classes to be used with
+    pyresto. See `Requests Documentation <http://docs.python-requests.org/en/
+    latest/user/advanced/#custom-authentication>`_ for more info.
+    """
     __metaclass__ = ABCMeta
 
     @abstractmethod
@@ -326,10 +331,9 @@ class Model(object):
 
     __metaclass__ = ModelBase
 
-    #: The class variable that holds the hostname for the API endpoint for the
-    #: :class:`Model` which is used in conjunction with the :attr:`_secure`
-    #: attribute to generate a bound HTTP request factory at the time of class
-    #: creation. See :class:`ModelBase` for implementation.
+    #: The class variable that holds the bae uel for the API endpoint for the
+    #: :class:`Model`. This should be a "full" URL including the scheme, port
+    #: and the initial path if there is any.
     _url_base = None
 
     #: The class variable that holds the path to be used to fetch the instance
@@ -340,6 +344,9 @@ class Model(object):
     #: be available to this string for formatting.
     _path = None
 
+    #: The class variable that holds the default authentication object to be
+    #: passed to :mod:`requests`. Can be overridden on either class or instance
+    #: level for convenience.
     _auth = None
 
     @classmethod

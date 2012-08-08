@@ -18,12 +18,17 @@ pyresto.core.Model
 
     .. automethod:: __init__
 
-    .. autoattribute:: _secure
-    .. autoattribute:: _host
+    .. autoattribute:: _url_base
     .. autoattribute:: _path
+    .. autoattribute:: _auth
     .. autoattribute:: _parser
     .. autoattribute:: _fetched
     .. autoattribute:: _get_params
+
+pyresto.core.Auth
+----------------------
+
+.. autoclass:: Auth
 
 pyresto.core.Relation
 ----------------------
