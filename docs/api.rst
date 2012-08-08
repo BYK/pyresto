@@ -30,6 +30,16 @@ pyresto.core.Auth
 
 .. autoclass:: Auth
 
+pyresto.core.AuthList
+----------------------
+
+.. autoclass:: AuthList
+
+pyresto.core.enable_auth
+------------------------
+
+.. autofunction:: enable_auth
+
 pyresto.core.Relation
 ----------------------
 
@@ -60,7 +70,7 @@ pyresto.core.LazyList
 .. autoclass:: LazyList
 
 pyresto.core.PyrestoException
--------------------------------------------
+-----------------------------
 
 .. autoclass:: PyrestoException
 
@@ -68,3 +78,13 @@ pyresto.core.PyrestoServerResponseException
 -------------------------------------------
 
 .. autoclass:: PyrestoServerResponseException
+
+pyresto.core.PyrestoInvalidRestMethodException
+----------------------------------------------
+
+.. autoclass:: PyrestoInvalidRestMethodException
+
+pyresto.core.PyrestoInvalidAuthTypeException
+--------------------------------------------
+
+.. autoclass:: PyrestoInvalidAuthTypeException

@@ -1,27 +1,7 @@
 # coding: utf-8
 
-from ...core import Foreign, Many, Model, Auth, PyrestoException
+from ...core import Foreign, Many, Model, AuthList, enable_auth
 from requests.auth import HTTPBasicAuth
-
-
-BasicAuth = HTTPBasicAuth
-
-
-class GitHubInvalidAuthTypeException(PyrestoException):
-    """
-    Error class for exceptions thrown when an invalid auth type is used with
-    :func:`auth`
-    """
-
-def auth(type='basic', **kwargs):
-    if type is None:
-        GitHubModel._auth = None
-        return
-
-    if type != 'basic':
-        raise GitHubInvalidAuthTypeException('Unsupported auth type.')
-
-    GitHubModel._auth = BasicAuth(**kwargs)
 
 
 class GitHubModel(Model):
@@ -97,3 +77,9 @@ Repo.owner = Foreign(User, 'owner')
 Repo.watcher_list = Many(User, '{repo.url}/watchers?per_page=100')
 User.follower_list = Many(User, '{user.url}/followers?per_page=100')
 User.watched = Many(Repo, '{user.url}/watched?per_page=100')
+
+# Define authentication methods
+auths = AuthList(basic=HTTPBasicAuth)
+
+# Enable and publish global authentication
+auth = enable_auth(auths, GitHubModel, 'basic')
