@@ -1,6 +1,22 @@
 # coding: utf-8
 
-from ...core import Foreign, Many, Model
+from ...core import Foreign, Many, Model, Auth, PyrestoException
+from requests.auth import HTTPBasicAuth
+
+
+class BasicAuth(HTTPBasicAuth, Auth):
+    pass
+
+
+def setDefaultAuth(type='basic', **kwargs):
+    if type is None:
+        GitHubModel._auth = None
+        return
+
+    if type != 'basic':
+        raise PyrestoException('Unsupported auth type.')
+
+    GitHubModel._auth = BasicAuth(**kwargs)
 
 
 class GitHubModel(Model):
@@ -61,13 +77,13 @@ class User(GitHubModel):
     keys = Many(Key, '/user/keys?per_page=100')
 
 
-class Self(User):
+class Me(User):
     _path = '/user'
     repos = Many(Repo, '/user/repos?type=all&per_page=100')
 
     @classmethod
     def get(cls, **kwargs):
-        return super(Self, cls).get(None, **kwargs)
+        return super(Me, cls).get(None, **kwargs)
 
 
 # Late bindings due to circular references
