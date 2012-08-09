@@ -67,6 +67,9 @@ class ModelBase(ABCMeta):
         if not hasattr(new_class, '_path'):  # don't override if defined
             new_class._path = u'/{0}/{{1:id}}'.format(quote(name.lower()))
 
+        if not isinstance(new_class._pk, tuple):  # make sure it is a tuple
+            new_class._pk = (new_class._pk,)
+
         return new_class
 
 
@@ -164,7 +167,7 @@ class AuthList(dict):
     :data:`apis.github.auths` for example usage.
 
     .. literalinclude:: ../pyresto/apis/github/__init__.py
-        :lines: 81-82
+        :lines: 89-90
 
     """
     def __getattr__(self, attr):
@@ -180,7 +183,7 @@ def enable_auth(supported_types, base_model, default_type):
     :func:`apis.github.auth` for example usage.
 
     .. literalinclude:: ../pyresto/apis/github/__init__.py
-        :lines: 84-85
+        :lines: 92-93
 
     :param supported_types: A dict of supported types as ``"name": AuthClass``
                             pairs
@@ -247,7 +250,7 @@ class Many(Relation):
         """
 
         self.__model = model
-        self.__path = unicode(path) or model._path  # ensure unicode
+        self.__path = path or model._path  # ensure unicode
         self.__lazy = lazy
         self.__cache = dict()
 
@@ -313,12 +316,7 @@ class Many(Relation):
         if instance not in self.__cache:
             model = self.__model
 
-            # Get the necessary dict object collected from the chain of Models
-            # to properly populate the collection path
-            path_params = instance._parents
-            if hasattr(instance, '_get_params'):
-                path_params.update(instance._get_params)
-            path = self.__path.format(**path_params)
+            path = self.__path.format(**instance._footprint)
 
             if self.__lazy:
                 self.__cache[instance] = LazyList(self._with_owner(instance),
@@ -340,7 +338,8 @@ class Foreign(Relation):
 
     """
 
-    def __init__(self, model, key_property=None, key_extractor=None):
+    def __init__(self, model, key_property=None, key_extractor=None,
+                 embedded=False):
         """
         Constructor for the :class:`Foreign` relations.
 
@@ -362,13 +361,30 @@ class Foreign(Relation):
         """
 
         self.__model = model
-        if not key_property:
-            key_property = model.__name__.lower()
-        model_pk = model._pk
-        self.__key_extractor = (key_extractor if key_extractor else
-            lambda x: dict(model_pk=getattr(x, '__' + key_property)[model_pk]))
-
         self.__cache = dict()
+        self.__embedded = embedded and not key_extractor
+
+        self.__key_property = key_property or '__' + model.__name__.lower()
+
+        if key_extractor:
+            self.__key_extractor = key_extractor
+        elif not embedded:
+            def extract(instance):
+                footprint = instance._footprint
+                ids = list()
+
+                for k in self.__model._pk[:-1]:
+                    ids.append(footprint[k] if k in footprint
+                                else getattr(instance, k))
+
+                item, key = re.match(r'(\w+)(?:\[(\w+)\])?',
+                                          key_property).groups()
+                item = getattr(instance, item)
+                ids.append(item[key] if key else item)
+
+                return tuple(ids)
+
+            self.__key_extractor = extract
 
     def __get__(self, instance, owner):
         # Please see Many.__get__ for more info on this method.
@@ -376,11 +392,15 @@ class Foreign(Relation):
             return self.__model
 
         if instance not in self.__cache:
-            keys = instance._parents
-            keys.update(self.__key_extractor(instance))
-            pk = keys.pop(self.__model._pk)
-            self.__cache[instance] = self.__model.get(pk, auth=instance._auth,
-                                                      **keys)
+            if self.__embedded:
+                self.__cache[instance] = self.__model(
+                    **getattr(instance, self.__key_property))
+                self.__cache[instance]._auth = instance._auth
+            else:
+                self.__cache[instance] = self.__model.get(
+                    *self.__key_extractor(instance), auth=instance._auth)
+
+            self.__cache[instance]._pyresto_owner = instance
 
         return self.__cache[instance]
 
@@ -394,6 +414,10 @@ class Model(object):
     """
 
     __metaclass__ = ModelBase
+
+    __footprint = None
+
+    __pk_vals = None
 
     #: The class variable that holds the bae uel for the API endpoint for the
     #: :class:`Model`. This should be a "full" URL including the scheme, port
@@ -475,8 +499,6 @@ class Model(object):
     #: current :class:`Model` instance while fetching its related resources.
     _get_params = dict()
 
-    __ids = None
-
     def __init__(self, **kwargs):
         """
         Constructor for model instances. All named parameters passed to this
@@ -504,34 +526,43 @@ class Model(object):
             if issubclass(getattr(cls, item), Model):
                 self.__dict__['__' + item] = self.__dict__.pop(item)
 
-        try:
-            self._current_path = self._path and (
-                self._path.format(**self.__dict__))
-        except KeyError:
-            self._current_path = None
-
     @property
     def _id(self):
         """A property that returns the instance's primary key value."""
-        return getattr(self, self._pk)
+        if self.__pk_vals:
+            return self.__pk_vals[-1]
+        else:  # assuming last pk is defined on self!
+            return getattr(self, self._pk[-1])
 
     @property
-    def _parents(self):
-        """
-        A property that returns a look-up dictionary for all parents of the
-        current instance. Uses lower-cased class names for keys and the
-        instance references as their values.
+    def _pk_vals(self):
+        if not self.__pk_vals:
+            if hasattr(self, '_pyresto_owner'):
+                self.__pk_vals = self._pyresto_owner.\
+                                 _pk_vals[:len(self._pk) - 1] + (self._id,)
+            else:
+                self.__pk_vals = (None,) * (len(self._pk) - 1) + (self._id,)
 
-        """
+        return self.__pk_vals
 
-        if self.__ids is None:
-            self.__ids = dict()
-            owner = self
-            while owner:
-                self.__ids[owner.__class__.__name__.lower()] = owner
-                owner = getattr(owner, '_pyresto_owner', None)
+    @_pk_vals.setter
+    def _pk_vals(self, value):
+        if len(value) == len(self._pk):
+            self.__pk_vals = tuple(value)
+        else:
+            raise ValueError
 
-        return self.__ids
+    @property
+    def _footprint(self):
+        if not self.__footprint:
+            self.__footprint = dict(zip(self._pk, self._pk_vals))
+            self.__footprint['self'] = self
+
+        return self.__footprint
+
+    @property
+    def _current_path(self):
+        return self._path.format(**self._footprint)
 
     @classmethod
     def _get_sanitized_url(cls, url):
@@ -595,19 +626,19 @@ class Model(object):
                 'Response code: {0:d}'.format(response.status_code))
 
     def __fetch(self):
-        # if we don't have a path then we cannot fetch anything since we don't
-        # know the address of the resource.
-        if not self._current_path:
-            self._fetched = True
-            return
-
         data, next_url = self._rest_call(url=self._current_path,
                                          auth=self._auth)
-        if next_url:
-            self._current_path = next_url
 
         if data:
             self.__dict__.update(data)
+
+            cls = self.__class__
+            overlaps = set(cls.__dict__) & set(data)
+
+            for item in overlaps:
+                if issubclass(getattr(cls, item), Model):
+                    self.__dict__['__' + item] = self.__dict__.pop(item)
+
             self._fetched = True
 
     def __getattr__(self, name):
@@ -620,17 +651,16 @@ class Model(object):
         return isinstance(other, self.__class__) and self._id == other._id
 
     def __repr__(self):
-        if self._current_path:
+        if self._path:
             descriptor = self._current_path
         else:
-            descriptor = ' - {0}: {1}'.format(self._pk, self._id)
+            descriptor = ' - {0}'.format(self._footprint)
 
-        return '<Pyresto.Model.{0} [{1}{2}]>'.format(self.__class__.__name__,
-                                                     self._url_base,
-                                                     descriptor)
+        return '<Pyresto.Model.{0} [{1}]>'.format(self.__class__.__name__,
+                                                  descriptor)
 
     @classmethod
-    def get(cls, pk, **kwargs):
+    def get(cls, *args, **kwargs):
         """
         The class method that fetches and instantiates the resource defined by
         the provided pk value. Any other extra keyword arguments are used to
@@ -644,15 +674,16 @@ class Model(object):
         """
 
         auth = kwargs.pop('auth', cls._auth)
-        kwargs[cls._pk] = pk
-        path = cls._path.format(**kwargs)
+
+        ids = dict(zip(cls._pk, args))
+        path = cls._path.format(**ids)
         data = cls._rest_call(url=path, auth=auth).data
 
         if not data:
             return
 
         instance = cls(**data)
-        instance._get_params = kwargs
+        instance._pk_vals = args
         instance._fetched = True
         if auth:
             instance._auth = auth
