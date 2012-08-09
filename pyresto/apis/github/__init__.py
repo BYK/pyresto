@@ -15,18 +15,18 @@ class GitHubModel(Model):
 
 
 class Comment(GitHubModel):
-    _path = '{repo.url}/comments/{id}'
+    _path = '/repos/{user}/{repo}/comments/{id}'
     _pk = 'id'
 
 
 class Commit(GitHubModel):
-    _path = '{repo.url}/commits/{sha}'
+    _path = '/repos/{user}/{repo}/commits/{sha}'
     _pk = 'sha'
     comments = Many(Comment, '{commit.url}/comments?per_page=100')
 
 
 class Branch(GitHubModel):
-    _path = None
+    _path = '/repos/{user}/{repo}/branches/{name}'
     _pk = 'name'
     commit = Foreign(Commit)
     commits = Many(Commit, '{repo.url}/commits?per_page=100&sha={branch._id}',
@@ -34,7 +34,7 @@ class Branch(GitHubModel):
 
 
 class Tag(GitHubModel):
-    _path = None
+    _path = '/repos/{user}/{repo}/tags/{id}'
     _pk = 'name'
     commit = Foreign(Commit)
 
@@ -45,7 +45,7 @@ class Key(GitHubModel):
 
 
 class Repo(GitHubModel):
-    _path = '{user.url}/{name}'
+    _path = '/repos/{user}/{name}'
     _pk = 'name'
     commits = Many(Commit, '{repo.url}/commits?per_page=100', lazy=True)
     comments = Many(Comment, '{repo.url}/comments?per_page=100')
