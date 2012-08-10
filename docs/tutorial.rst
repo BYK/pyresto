@@ -17,7 +17,7 @@ will hold the common values such as the API host, the common model
 representation using ``__repr__`` etc:
 
 .. literalinclude:: ../pyresto/apis/github/__init__.py
-    :lines: 7-14
+    :lines: 7-18
 
 
 Simple Models
@@ -27,7 +27,7 @@ Then continue with implementing simple models which does not refer to any other
 model, such as the ``Comment`` model for GitHub:
 
 .. literalinclude:: ../pyresto/apis/github/__init__.py
-    :lines: 17-19
+    :lines: 21-23
 
 
 Note that we didn't define *any* attributes except for the mandatory ``_path``
@@ -47,7 +47,7 @@ After defining some "simple" models, you can start implementing models having
 relations with each other:
 
 .. literalinclude:: ../pyresto/apis/github/__init__.py
-    :lines: 22-25
+    :lines: 26-29
 
 Note that we used the attribute name ``comments`` which will "shadow" any
 attribute named "comments" sent by the server as documented in
@@ -74,7 +74,7 @@ If we were expecting lots of items to be in the collection, or an unknown
 number of items in the collection, we could have used ``lazy=True`` like this:
 
 .. literalinclude:: ../pyresto/apis/github/__init__.py
-    :lines: 47-54
+    :lines: 51-59
 
 Using ``lazy=True`` will result in a :class:`LazyList<.core.LazyList>` type of
 field on the model when accessed, which is basically a generator. So you can
@@ -85,7 +85,7 @@ You can also use the :class:`Foreign<.core.Foreign>` relation to refer to
 other models:
 
 .. literalinclude:: ../pyresto/apis/github/__init__.py
-    :lines: 36-39
+    :lines: 40-43
 
 When used in its simplest form, just like in the code above, this relation
 expects the primary key value for the model it is referencing, ``Commit`` here,
@@ -105,7 +105,7 @@ not always possible to put all relation definitons inside the class definition.
 For those cases, you can simply late bind the relations as follows:
 
 .. literalinclude:: ../pyresto/apis/github/__init__.py
-    :lines: 74-79
+    :lines: 79-87
 
 
 Authentication
@@ -116,7 +116,7 @@ means of authentication is essential. Define the possible authentication
 mechanisms for the service:
 
 .. literalinclude:: ../pyresto/apis/github/__init__.py
-    :lines: 4,81-82
+    :lines: 4,89-81
 
 Make sure you use the provided authentication classes by :mod:`requests.auth`
 if they suit your needs. If you still need a custom authentication class, make
@@ -127,7 +127,7 @@ will set the default authentication method and credentials for all requests for
 convenience:
 
 .. literalinclude:: ../pyresto/apis/github/__init__.py
-    :lines: 84-85
+    :lines: 92-93
 
 Above, we provide the list of methods/classes we have previously defined, the
 base class for our service since all other models inherit from that and will
