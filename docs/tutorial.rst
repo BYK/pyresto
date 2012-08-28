@@ -116,7 +116,7 @@ means of authentication is essential. Define the possible authentication
 mechanisms for the service:
 
 .. literalinclude:: ../pyresto/apis/github/__init__.py
-    :lines: 4,89-81
+    :lines: 4,89-90
 
 Make sure you use the provided authentication classes by :mod:`requests.auth`
 if they suit your needs. If you still need a custom authentication class, make
