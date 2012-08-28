@@ -1,8 +1,0 @@
-argparse==1.2.1
-ipython==0.12.1
-nose==1.1.2
-py==1.4.9
-tox==1.4
-virtualenv==1.7.1.2
-wsgiref==0.1.2
-requests==0.13.5

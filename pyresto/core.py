@@ -227,7 +227,7 @@ class Many(Relation):
 
     """
 
-    def __init__(self, model, path=None, lazy=False):
+    def __init__(self, model, path=None, lazy=False, preprocessor=None):
         """
         Constructor for Many relation instances.
 
@@ -250,8 +250,9 @@ class Many(Relation):
         """
 
         self.__model = model
-        self.__path = path or model._path  # ensure unicode
+        self.__path = path or model._path
         self.__lazy = lazy
+        self.__preprocessor = preprocessor
         self.__cache = dict()
 
     def _with_owner(self, owner):
@@ -276,6 +277,13 @@ class Many(Relation):
 
         return mapper
 
+    def __sanitize_data(self, data):
+        if not data:
+            return list()
+        elif self.__preprocessor:
+            return self.__preprocessor(data)
+        return data
+
     def __make_fetcher(self, url, instance):
         """
         A function factory method which creates a simple fetcher function for
@@ -297,8 +305,7 @@ class Many(Relation):
                                                     fetch_all=False)
             # Note the fetch_all=False in the call above, since this method is
             # intended for iterative LazyList calls.
-            if not data:
-                data = list()
+            data = self.__sanitize_data(data)
 
             new_fetcher = self.__make_fetcher(new_url,
                                               instance) if new_url else None
@@ -313,21 +320,21 @@ class Many(Relation):
         if not instance:
             return self.__model
 
-        if instance not in self.__cache:
+        cache = self.__cache
+        if instance not in cache:
             model = self.__model
 
             path = self.__path.format(**instance._footprint)
 
             if self.__lazy:
-                self.__cache[instance] = LazyList(self._with_owner(instance),
-                                                  self.__make_fetcher(path,
-                                                                     instance))
+                cache[instance] = LazyList(self._with_owner(instance),
+                                           self.__make_fetcher(path, instance))
             else:
                 data, next_url = model._rest_call(url=path,
                                                   auth=instance._auth)
-                self.__cache[instance] =\
-                        WrappedList(data or list(), self._with_owner(instance))
-        return self.__cache[instance]
+                cache[instance] = WrappedList(self.__sanitize_data(data),
+                                              self._with_owner(instance))
+        return cache[instance]
 
 
 class Foreign(Relation):
