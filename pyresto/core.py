@@ -438,35 +438,22 @@ class Model(object):
     _auth = None
 
     @classmethod
-    def _continuator(cls, response, pattern=r'\<([^\>]+)\>;\srel="(\w+)"'):
+    def _continuator(cls, response):
         """
         The class method which receives the response from the server. This
         method is expected to return a continuation URL for the fetched
         resource, if there is any (like the next page's URL for paginated
-        content) and ``None`` otherwise. The default implementation  parses the
+        content) and ``None`` otherwise. The default implementation uses the
         standard HTTP link header and returns the url provided under the label
         "next" for continuation and ``None`` if it cannot find this label.
 
         :param response: The response for the HTTP request made to fetch the
                          resources.
-        :type response: :class:`httplib.HTTPResponse`
-
-        :param pattern: (optional) The regular expression pattern to parse the
-                        link header in the response. :data:`re.I` and
-                        :data:`re.U` flags are hard-coded due to the nature
-                        of HTTP responses.
-        :type pattern: string
+        :type response: :class:`requests.Response`
 
         """
 
-        link_val = response.headers.get('Link', None)
-        if not link_val:
-            return
-
-        links = dict(re.match(pattern, link.strip(), re.I | re.U).group(2, 1)
-                         for link in link_val.split(','))
-
-        return links.setdefault('next', None)
+        return request.links.get('next', None)
 
     #: The class method which receives the class object and the body text of
     #: the server response to be parsed. It is expected to return a
