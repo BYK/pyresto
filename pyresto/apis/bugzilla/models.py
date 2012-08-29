@@ -1,8 +1,10 @@
 # coding: utf-8
 
+from operator import itemgetter  # built-in
+
+from requests.auth import AuthBase  # third party
+
 from pyresto.core import Foreign, Many, Model, AuthList, enable_auth
-from requests.auth import AuthBase
-from operator import itemgetter
 
 
 class QSAuth(AuthBase):
