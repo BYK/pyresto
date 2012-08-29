@@ -95,7 +95,7 @@ class Bug(BugzillaModel):
             else:
                 preprocessor = itemgetter(field)
             setattr(cls, field, Many(model, path, preprocessor=preprocessor))
-        cls._path = cls._path + '?include_fields=_all&exclude_fields=' +\
+        cls._path = cls._path + '?include_fields=_all&exclude_fields=' + \
                    ','.join(many_fields.keys())
 
         return cls
@@ -106,11 +106,11 @@ class Bug(BugzillaModel):
     qa_contact = Foreign(User, '__qa_contact', embedded=True)
 
 
-# Late bindings
+# late bindings
 Attachment.bug = Foreign(Bug, 'bug_id')
 Bug.dupe_of = Foreign(Bug, '__dupe_of')  # only present if RESOLVED DUPLICATE
 
-# Initialize all many fields at once for the sake of DRY
+# initialize all many fields at once for the sake of DRY
 Bug.init_many_fields({
     'attachments': Attachment,
     'blocks': Bug,
@@ -122,8 +122,8 @@ Bug.init_many_fields({
 })
 
 
-# Define authentication methods
+# define authentication methods
 auths = AuthList(querystring=QSAuth)
 
-# Enable and publish global authentication
+# enable and publish global authentication
 auth = enable_auth(auths, BugzillaModel, 'querystring')
