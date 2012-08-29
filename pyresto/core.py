@@ -460,7 +460,7 @@ class Model(object):
 
         """
 
-        return request.links.get('next', None)
+        return response.links.get('next', None)
 
     #: The class method which receives the class object and the body text of
     #: the server response to be parsed. It is expected to return a
