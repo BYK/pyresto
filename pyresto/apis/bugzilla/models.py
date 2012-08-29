@@ -20,7 +20,7 @@ class QSAuth(AuthBase):
 
 
 class BugzillaModel(Model):
-    _url_base = 'https://api-dev.bugzilla.mozilla.org/latest/'
+    _url_base = __service_url__
 
     def __repr__(self):
         if hasattr(self, 'ref'):

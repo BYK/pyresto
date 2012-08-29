@@ -24,7 +24,11 @@ from abc import ABCMeta, abstractproperty, abstractmethod
 from urllib import quote
 
 
-__all__ = ('Error', 'Model', 'Many', 'Foreign')
+__all__ = ('PyrestoException',
+           'PyrestoServerResponseException',
+           'PyrestoInvalidRestMethodException',
+           'PyrestoInvalidAuthTypeException',
+           'Model', 'Many', 'Foreign')
 
 ALLOWED_HTTP_METHODS = frozenset(('GET', 'POST', 'PUT', 'DELETE', 'PATCH'))
 
