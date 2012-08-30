@@ -1,4 +1,4 @@
 # coding: utf-8
 
 __title__ = 'pyresto'
-__version__ = '0.2'
+__version__ = '0.3'
