@@ -3,6 +3,7 @@
 
 import imp
 import os.path
+import types
 
 __version__ = '0.2'
 __author__ = ('Berker Peksag <berker.peksag@gmail.com>',
@@ -22,7 +23,7 @@ __services__ = dict(
 __all__ = ('Service',) + tuple(__services__.iterkeys())
 
 
-class Service(object):
+class Service(types.ModuleType):
     def __init__(self, name, url):
         self.name = name
         self.module_name = '{0}.{1}'.format(__name__, self.name)
