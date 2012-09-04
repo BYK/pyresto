@@ -12,11 +12,11 @@ class QSAuth(AuthBase):
         self.username = username
         self.password = password
 
-    def __call__(self, r):
-        if not r.redirect:
-            r.params['username'] = self.username
-            r.params['password'] = self.password
-        return r
+    def __call__(self, req):
+        if not req.redirect:
+            req.params['username'] = self.username
+            req.params['password'] = self.password
+        return req
 
 
 class BugzillaModel(Model):
