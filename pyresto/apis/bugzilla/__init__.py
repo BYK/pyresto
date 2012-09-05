@@ -3,7 +3,9 @@
 
 import imp
 import os.path
+import sys
 import types
+
 
 __version__ = '0.2'
 __author__ = ('Berker Peksag <berker.peksag@gmail.com>',
@@ -38,6 +40,7 @@ class Service(types.ModuleType):
             self.__namespace = imp.new_module(self.module_name)
             self.__namespace.__service_url__ = self.url
             exec __models_code__ in self.__namespace.__dict__
+            sys.modules[self.module_name] = self.__namespace
 
         return self.__namespace
 
