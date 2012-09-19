@@ -667,7 +667,7 @@ class Model(object):
         :param pk: The primary key value for the requested resource.
         :type pk: string
 
-        :rtype: Model or None
+        :rtype: :class:`Model` or None
 
         """
 
@@ -678,7 +678,7 @@ class Model(object):
         data = cls._rest_call(url=path, auth=auth).data
 
         if not data:
-            return
+            return None
 
         instance = cls(**data)
         instance._pk_vals = args
