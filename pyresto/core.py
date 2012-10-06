@@ -718,7 +718,7 @@ class Model(object):
             auth = cls._auth or instance._auth
 
         if keys:
-            keys & instance._changed
+            keys &= instance._changed
         else:
             keys = instance._changed
 
