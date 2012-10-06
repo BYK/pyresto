@@ -85,8 +85,8 @@ class Me(User):
     keys = Many(Key, '/user/keys?per_page=100')
 
     @classmethod
-    def get(cls, **kwargs):
-        return super(Me, cls).get(None, **kwargs)
+    def read(cls, **kwargs):
+        return super(Me, cls).read(None, **kwargs)
 
 
 # Late bindings due to circular references
