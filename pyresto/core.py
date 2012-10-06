@@ -25,6 +25,7 @@ from urllib import quote
 
 
 __all__ = ('PyrestoException',
+           'PyrestoInvalidOperationException',
            'PyrestoServerResponseException',
            'PyrestoInvalidRestMethodException',
            'PyrestoInvalidAuthTypeException',
@@ -35,6 +36,10 @@ ALLOWED_HTTP_METHODS = frozenset(('GET', 'POST', 'PUT', 'DELETE', 'PATCH'))
 
 class PyrestoException(Exception):
     """Base error class for pyresto."""
+
+
+class PyrestoInvalidOperationException(PyrestoException):
+    """Invalid operation error class for Pyresto."""
 
 
 class PyrestoServerResponseException(PyrestoException):
@@ -431,6 +436,8 @@ class Model(object):
 
     __pk_vals = None
 
+    _changed = None
+
     #: The class variable that holds the bae uel for the API endpoint for the
     #: :class:`Model`. This should be a "full" URL including the scheme, port
     #: and the initial path if there is any.
@@ -474,6 +481,13 @@ class Model(object):
     #: to override it if the response type is valid JSON.
     _parser = staticmethod(json.loads)
 
+    #: The class method which receives the class object and a property dict of
+    #: an instance to be serialized. It is expected to return a string which
+    #: will be sent to the server on modification requests such as PATCH or
+    #: CREATE. Defaults to a "staticazed" version of :func:`json.loads` so it
+    #: is not necessary to override it if the response type is valid JSON.
+    _serializer = staticmethod(json.dumps)
+
     @abstractproperty
     def _pk(self):
         """
@@ -509,11 +523,6 @@ class Model(object):
         is provided to the constructor, its value is saved under ``__father``
         to be used by the :class:`Foreign` relationship class as the id of the
         foreign :class:`Model`.
-
-        Constructor also tries to populate the :attr:`Model._current_path`
-        instance variable by formatting :attr:`Model._path` using the arguments
-        provided.
-
         """
 
         self.__dict__.update(kwargs)
@@ -524,6 +533,8 @@ class Model(object):
         for item in overlaps:
             if issubclass(getattr(cls, item), Model):
                 self.__dict__['__' + item] = self.__dict__.pop(item)
+
+        self._changed = set()
 
     @property
     def _id(self):
@@ -649,6 +660,15 @@ class Model(object):
         self.__fetch()
         return getattr(self, name)  # try again after fetching
 
+    def __setattr__(self, key, value):
+        if not key.startswith('_'):
+            self._changed.add(key)
+        super(Model, self).__setattr__(key, value)
+
+    def __delattr__(self, item):
+        raise PyrestoInvalidOperationException(
+            "Del method on Pyresto models is not supported.")
+
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self._id == other._id
 
@@ -662,7 +682,7 @@ class Model(object):
                                                   descriptor)
 
     @classmethod
-    def get(cls, *args, **kwargs):
+    def read(cls, *args, **kwargs):
         """
         The class method that fetches and instantiates the resource defined by
         the provided pk value. Any other extra keyword arguments are used to
@@ -691,3 +711,31 @@ class Model(object):
             instance._auth = auth
 
         return instance
+
+    @classmethod
+    def update(cls, instance, keys=None, auth=None):
+        if auth is None:
+            auth = cls._auth or instance._auth
+
+        if keys:
+            keys & instance._changed
+        else:
+            keys = instance._changed
+
+        data = dict((key, instance.__dict__[key]) for key in keys)
+        path = instance._current_path
+        resp = cls._rest_call(method="PATCH", url=path, auth=auth,
+                              data=cls._serializer(data)).data
+        instance.__dict__.update(resp)
+        instance._changed -= keys
+
+        return instance
+
+    @classmethod
+    def delete(cls, instance, auth=None):
+        if auth is None:
+            auth = cls._auth or instance._auth
+
+        cls._rest_call(method="DELETE", url=instance._current_path, auth=auth)
+
+        return True  # will raise error if server responds with non 2xx
