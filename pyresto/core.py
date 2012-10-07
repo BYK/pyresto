@@ -34,6 +34,25 @@ __all__ = ('PyrestoException',
 ALLOWED_HTTP_METHODS = frozenset(('GET', 'POST', 'PUT', 'DELETE', 'PATCH'))
 
 
+def assert_class_instance(class_method):
+    def asserted(cls, instance, *args, **kwargs):
+        assert isinstance(instance, cls)
+        return class_method(cls, instance, *args, **kwargs)
+
+    return asserted
+
+
+def normalize_auth(class_method):
+    def normalized(cls, instance, *args, **kwargs):
+        auth = kwargs.get('auth', None)
+        if auth is None:
+            auth = cls._auth or instance._auth
+        kwargs['auth'] = auth
+        return class_method(cls, instance, *args, **kwargs)
+
+    return normalized
+
+
 class PyrestoException(Exception):
     """Base error class for pyresto."""
 
@@ -77,6 +96,9 @@ class ModelBase(ABCMeta):
 
         if not isinstance(new_class._pk, tuple):  # make sure it is a tuple
             new_class._pk = (new_class._pk,)
+
+        new_class.update = new_class.update_with_patch if\
+            new_class._update_method == 'PATCH' else new_class.update_with_put
 
         return new_class
 
@@ -432,6 +454,8 @@ class Model(object):
 
     __metaclass__ = ModelBase
 
+    _update_method = 'PATCH'
+
     __footprint = None
 
     __pk_vals = None
@@ -713,10 +737,9 @@ class Model(object):
         return instance
 
     @classmethod
-    def update(cls, instance, keys=None, auth=None):
-        if auth is None:
-            auth = cls._auth or instance._auth
-
+    @normalize_auth
+    @assert_class_instance
+    def update_with_patch(cls, instance, keys=None, auth=None):
         if keys:
             keys &= instance._changed
         else:
@@ -732,10 +755,22 @@ class Model(object):
         return instance
 
     @classmethod
-    def delete(cls, instance, auth=None):
-        if auth is None:
-            auth = cls._auth or instance._auth
+    @normalize_auth
+    @assert_class_instance
+    def update_with_put(cls, instance, auth=None):
+        data = instance.__dict__.copy()
+        path = instance._current_path
+        resp = cls._rest_call(method="PUT", url=path, auth=auth,
+                              data=cls._serializer(data)).data
+        instance.__dict__.update(resp)
+        instance._changed.clear()
 
+        return instance
+
+    @classmethod
+    @normalize_auth
+    @assert_class_instance
+    def delete(cls, instance, auth=None):
         cls._rest_call(method="DELETE", url=instance._current_path, auth=auth)
 
         return True  # will raise error if server responds with non 2xx
