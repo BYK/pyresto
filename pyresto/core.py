@@ -44,7 +44,7 @@ def assert_class_instance(class_method):
 
 def normalize_auth(class_method):
     def normalized(cls, instance, *args, **kwargs):
-        auth = kwargs.get('auth', None)
+        auth = kwargs.get('auth')
         if auth is None:
             auth = cls._auth or instance._auth
         kwargs['auth'] = auth
@@ -97,7 +97,7 @@ class ModelBase(ABCMeta):
         if not isinstance(new_class._pk, tuple):  # make sure it is a tuple
             new_class._pk = (new_class._pk,)
 
-        new_class.update = new_class.update_with_patch if\
+        new_class.update = new_class.update_with_patch if \
             new_class._update_method == 'PATCH' else new_class.update_with_put
 
         return new_class
