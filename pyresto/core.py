@@ -386,10 +386,10 @@ class Foreign(Relation):
 
                 for k in self.__model._pk[:-1]:
                     ids.append(footprint[k] if k in footprint
-                                else getattr(instance, k))
+                               else getattr(instance, k))
 
                 item, key = re.match(r'(\w+)(?:\[(\w+)\])?',
-                                          key_property).groups()
+                                     key_property).groups()
                 item = getattr(instance, item)
                 ids.append(item[key] if key else item)
 
@@ -536,8 +536,8 @@ class Model(object):
     def _pk_vals(self):
         if not self.__pk_vals:
             if hasattr(self, '_pyresto_owner'):
-                self.__pk_vals = self._pyresto_owner.\
-                                 _pk_vals[:len(self._pk) - 1] + (self._id,)
+                self.__pk_vals = self.\
+                    _pyresto_owner._pk_vals[:len(self._pk) - 1] + (self._id,)
             else:
                 self.__pk_vals = (None,) * (len(self._pk) - 1) + (self._id,)
 
@@ -625,7 +625,8 @@ class Model(object):
                           response.text)
 
             raise PyrestoServerResponseException('Server response not OK. '
-                'Response code: {0:d}'.format(response.status_code))
+                                                 'Response code: {0:d}'
+                                                 .format(response.status_code))
 
     def __fetch(self):
         data, next_url = self._rest_call(url=self._current_path,
