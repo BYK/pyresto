@@ -86,6 +86,8 @@ class Me(User):
 
     @classmethod
     def read(cls, **kwargs):
+        # User model requires a username where as Me does not so remove the
+        # first argument requirement from Me.read method.
         return super(Me, cls).read(None, **kwargs)
 
 
