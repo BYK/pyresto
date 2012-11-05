@@ -618,8 +618,12 @@ class Model(object):
                     return result(data, continuation_url)
             return result(data, None)
         else:
-            logging.error('%s returned HTTP %d: %s', url, response.status_code,
-                          kwargs)
+            logging.error('%s returned HTTP %d: %s'
+                          '\nResponse headers: %s'
+                          '\nResponse body: %s',
+                          url, response.status_code, kwargs, response.headers,
+                          response.text)
+
             raise PyrestoServerResponseException('Server response not OK. '
                 'Response code: {0:d}'.format(response.status_code))
 
