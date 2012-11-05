@@ -1,7 +1,20 @@
 # coding: utf-8
 
+from requests.auth import AuthBase, HTTPBasicAuth  # third party
+
 from ...core import Foreign, Many, Model, AuthList, enable_auth
-from requests.auth import HTTPBasicAuth
+
+
+class AppQSAuth(AuthBase):
+    def __init__(self, client_id, client_secret):
+        self.client_id = client_id
+        self.client_secret = client_secret
+
+    def __call__(self, req):
+        if not req.redirect:
+            req.params['client_id'] = self.client_id
+            req.params['client_secret'] = self.client_secret
+        return req
 
 
 class GitHubModel(Model):
@@ -87,7 +100,7 @@ User.follower_list = Many(User, '{self._current_path}/followers?per_page=100')
 User.watched = Many(Repo, '{self._current_path}/watched?per_page=100')
 
 # Define authentication methods
-auths = AuthList(basic=HTTPBasicAuth)
+auths = AuthList(basic=HTTPBasicAuth, app=AppQSAuth)
 
 # Enable and publish global authentication
-auth = enable_auth(auths, GitHubModel, 'basic')
+auth = enable_auth(auths, GitHubModel, 'app')
