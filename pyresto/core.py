@@ -56,9 +56,7 @@ class ModelBase(ABCMeta):
     """
     Meta class for :class:`Model` class. This class automagically creates the
     necessary :attr:`Model._path` class variable if it is not already
-    defined. The default path pattern is ``/ModelName/{id}``. It also generates
-    the connection factory for the new model based on the :attr:`Model._secure`
-    class variable defined in the model.
+    defined. The default path pattern is ``/modelname/{id}``.
 
     """
 
@@ -68,8 +66,9 @@ class ModelBase(ABCMeta):
         if name == 'Model':  # prevent unnecessary base work
             return new_class
 
-        if not hasattr(new_class, '_path'):  # don't override if defined
-            new_class._path = u'/{0}/{{1:id}}'.format(quote(name.lower()))
+        # don't override if defined
+        if not new_class._path:
+            new_class._path = u'/{0}/{{id}}'.format(quote(name.lower()))
 
         if not isinstance(new_class._pk, tuple):  # make sure it is a tuple
             new_class._pk = (new_class._pk,)
@@ -278,6 +277,8 @@ class Many(Relation):
                 return instance
             elif isinstance(data, self.__model):
                 return data
+            else:
+                raise TypeError("Invalid type passed to Many.")
 
         return mapper
 
@@ -618,11 +619,9 @@ class Model(object):
                     return result(data, continuation_url)
             return result(data, None)
         else:
-            logging.error('%s returned HTTP %d: %s'
-                          '\nResponse headers: %s'
-                          '\nResponse body: %s',
-                          url, response.status_code, kwargs, response.headers,
-                          response.text)
+            msg = '%s returned HTTP %d: %s\nResponse\nHeaders: %s\nBody: %s'
+            logging.error(msg, url, response.status_code, kwargs,
+                          response.headers, response.text)
 
             raise PyrestoServerResponseException('Server response not OK. '
                                                  'Response code: {0:d}'
