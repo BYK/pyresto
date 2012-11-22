@@ -29,7 +29,9 @@ setup(
     url='https://github.com/BYK/pyresto',
     packages=[
         'pyresto',
-        'pyresto.apis'
+        'pyresto.apis',
+        'pyresto.apis.github',
+        'pyresto.apis.bugzilla',
     ],
     license='Mozilla Public License, v. 2.0',
     classifiers=(
