@@ -7,10 +7,31 @@ Pyresto
 
 ::
 
+Examples
+--------
+
+GitHub
+======
+
+::
+
     import pyresto.apis.github as GitHub
 
     user = GitHub.User.get('berkerpeksag')
     print 'Watchers: {0:d}'.format(sum(r.watchers for r in user.repos))
+
+
+Bugzilla
+========
+
+::
+
+    from pyresto.apis.bugzilla import mozilla
+
+    mozilla.auth(username='<USERNAME>', password='<PASSWORD>')
+    bug = mozilla.Bug.get('774141')
+    print bug.id, bug.status, bug.summary
+    # 774141 NEW Add generic Bugzilla Python client API
 
 
 Installation
