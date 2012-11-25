@@ -170,8 +170,8 @@ class AuthList(dict):
     defining authentication methods available for a given api. See
     :data:`apis.github.auths` for example usage.
 
-    .. literalinclude:: ../pyresto/apis/github/__init__.py
-        :lines: 89-90
+    .. literalinclude:: ../pyresto/apis/github/models.py
+        :lines: 102-103
 
     """
     def __getattr__(self, attr):
@@ -186,8 +186,8 @@ def enable_auth(supported_types, base_model, default_type):
     A "global authentication enabler" function generator. See
     :func:`apis.github.auth` for example usage.
 
-    .. literalinclude:: ../pyresto/apis/github/__init__.py
-        :lines: 92-93
+    .. literalinclude:: ../pyresto/apis/github/models.py
+        :lines: 105-106
 
     :param supported_types: A dict of supported types as ``"name": AuthClass``
                             pairs
