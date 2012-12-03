@@ -33,6 +33,7 @@ setup(
         'pyresto.apis.github',
         'pyresto.apis.bugzilla',
     ],
+    install_requires=['requests==0.14.2'],
     license='Mozilla Public License, v. 2.0',
     classifiers=(
         'Development Status :: 4 - Beta',
