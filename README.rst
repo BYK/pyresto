@@ -13,7 +13,7 @@ Examples
 GitHub
 ^^^^^^
 
-::
+.. code-block:: python
 
     import pyresto.apis.github as GitHub
 
@@ -24,7 +24,7 @@ GitHub
 Bugzilla
 ^^^^^^^^
 
-::
+.. code-block:: python
 
     from pyresto.apis.bugzilla import mozilla
 
