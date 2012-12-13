@@ -74,7 +74,7 @@ class ChangeSet(BugzillaModel):
 
 
 class Attachment(BugzillaModel):
-    _path = 'attachment/{id}?exclude_fields=falgs'
+    _path = 'attachment/{id}?exclude_fields=flags'
     _pk = 'id'
 
     attacher = Foreign(User, '__attacher', embedded=True)
