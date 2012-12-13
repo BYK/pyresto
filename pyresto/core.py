@@ -113,7 +113,7 @@ class WrappedList(list):
         return items
 
     def __iter__(self):
-        # Call the base __iter__ to avoid inifnite recursion and then simply
+        # Call the base __iter__ to avoid infinite recursion and then simply
         # return an iterator.
         iterator = super(self.__class__, self).__iter__()
         return (self.__wrapper(item) for item in iterator)
