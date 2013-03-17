@@ -475,6 +475,8 @@ class Model(object):
     #: be available to this string for formatting.
     _path = None
 
+    _create_path = None
+
     #: The class variable that holds the default authentication object to be
     #: passed to :mod:`requests`. Can be overridden on either class or instance
     #: level for convenience.
@@ -536,7 +538,7 @@ class Model(object):
     #: current :class:`Model` instance while fetching its related resources.
     _get_params = dict()
 
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
         Constructor for model instances. All named parameters passed to this
         method are bound to the newly created instance. Any property names
@@ -549,8 +551,14 @@ class Model(object):
         foreign :class:`Model`.
         """
 
-        self.__dict__.update(kwargs)
+        self._pk_vals = args
 
+        self._set(**kwargs)
+
+        self._changed = set()
+
+    def _set(self, **kwargs):
+        self.__dict__.update(kwargs)
         cls = self.__class__
         overlaps = set(cls.__dict__) & set(kwargs)
 
@@ -558,15 +566,15 @@ class Model(object):
             if issubclass(getattr(cls, item), Model):
                 self.__dict__['__' + item] = self.__dict__.pop(item)
 
-        self._changed = set()
-
     @property
     def _id(self):
         """A property that returns the instance's primary key value."""
         if self.__pk_vals:
             return self.__pk_vals[-1]
-        else:  # assuming last pk is defined on self!
+        elif self._pk[-1] in self.__dict__:
             return getattr(self, self._pk[-1])
+        else:
+            return None
 
     @property
     def _pk_vals(self):
@@ -581,10 +589,7 @@ class Model(object):
 
     @_pk_vals.setter
     def _pk_vals(self, value):
-        if len(value) == len(self._pk):
-            self.__pk_vals = tuple(value)
-        else:
-            raise ValueError
+        self.__pk_vals = tuple(value) + (None,) * (len(self._pk) - len(value))
 
     @property
     def _footprint(self):
@@ -592,11 +597,21 @@ class Model(object):
             self.__footprint = dict(zip(self._pk, self._pk_vals))
             self.__footprint['self'] = self
 
-        return self.__footprint
+        return self.__footprint  # make this immutable dict!!!
 
     @property
     def _current_path(self):
-        return self._path.format(**self._footprint)
+        if self._id is not None:
+            return self._path.format(**self._footprint)
+
+    @property
+    def _data(self):
+        return dict((key, val) for (key, val) in
+                    self.__dict__.iteritems() if not key.startswith('_'))
+
+    @property
+    def _data_str(self):
+        return self._serializer(self._data)
 
     @classmethod
     def _get_sanitized_url(cls, url):
@@ -679,7 +694,8 @@ class Model(object):
             self._fetched = True
 
     def __getattr__(self, name):
-        if self._fetched:  # if we fetched and still don't have it, no luck!
+        # if we fetched and still don't have it OR this is private, no luck!
+        if self._fetched or name.startswith('_'):
             raise AttributeError
         self.__fetch()
         return getattr(self, name)  # try again after fetching
@@ -706,6 +722,25 @@ class Model(object):
                                                   descriptor)
 
     @classmethod
+    @normalize_auth
+    @assert_class_instance
+    def create(cls, instance, auth=None):
+        if cls._create_path:
+            path = cls._create_path
+        else:
+            footprint = dict(**instance._footprint)
+            del footprint['self']
+            footprint[cls._pk[-1]] = ''  # reset id to empty string for formatting
+            path = cls._path.format(**footprint)[:-1]  # no trailing slash
+
+        resp = cls._rest_call(method="POST", url=path, auth=auth,
+                              data=instance._data_str).data
+        instance._set(**resp)
+        instance._changed.clear()
+
+        return instance
+
+    @classmethod
     def read(cls, *args, **kwargs):
         """
         The class method that fetches and instantiates the resource defined by
@@ -728,8 +763,7 @@ class Model(object):
         if not data:
             return None
 
-        instance = cls(**data)
-        instance._pk_vals = args
+        instance = cls(*args, **data)
         instance._fetched = True
         if auth:
             instance._auth = auth
@@ -749,7 +783,7 @@ class Model(object):
         path = instance._current_path
         resp = cls._rest_call(method="PATCH", url=path, auth=auth,
                               data=cls._serializer(data)).data
-        instance.__dict__.update(resp)
+        instance._set(**resp)
         instance._changed -= keys
 
         return instance
@@ -762,7 +796,7 @@ class Model(object):
         path = instance._current_path
         resp = cls._rest_call(method="PUT", url=path, auth=auth,
                               data=cls._serializer(data)).data
-        instance.__dict__.update(resp)
+        instance._set(**resp)
         instance._changed.clear()
 
         return instance

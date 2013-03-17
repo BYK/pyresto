@@ -23,7 +23,7 @@ class GitHubModel(Model):
     def __repr__(self):
         if hasattr(self, '_links'):
             desc = self._links['self']
-        elif hasattr(self, 'url'):
+        elif 'url' in self.__dict__:
             desc = self.url
         else:
             desc = self._current_path
@@ -62,8 +62,9 @@ class Key(GitHubModel):
 
 
 class Repo(GitHubModel):
-    _path = '/repos/{user}/{name}'
-    _pk = ('user', 'name')
+    _path = '/repos/{owner}/{name}'
+    _create_path = '/user/repos'
+    _pk = ('owner', 'name')
     commits = Many(Commit, '{self._current_path}/commits?per_page=100',
                    lazy=True)
     comments = Many(Comment, '{self._current_path}/comments?per_page=100')
