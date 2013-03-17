@@ -456,8 +456,6 @@ class Model(object):
 
     _update_method = 'PATCH'
 
-    __footprint = None
-
     __pk_vals = None
 
     _changed = None
@@ -569,21 +567,22 @@ class Model(object):
     @property
     def _id(self):
         """A property that returns the instance's primary key value."""
-        if self.__pk_vals:
+        if self.__pk_vals and self.__pk_vals[-1] is not None:
             return self.__pk_vals[-1]
-        elif self._pk[-1] in self.__dict__:
-            return getattr(self, self._pk[-1])
         else:
-            return None
+            return getattr(self, self._pk[-1], None)
 
     @property
     def _pk_vals(self):
-        if not self.__pk_vals:
+        if not self.__pk_vals or not all(self.__pk_vals):
+            pk_count = len(self._pk)
             if hasattr(self, '_pyresto_owner'):
-                self.__pk_vals = self.\
-                    _pyresto_owner._pk_vals[:len(self._pk) - 1] + (self._id,)
+                defaults = self._pyresto_owner._pk_vals
             else:
-                self.__pk_vals = (None,) * (len(self._pk) - 1) + (self._id,)
+                defaults = (None,) * pk_count
+
+            self.__pk_vals = tuple(getattr(self, name, defaults[i]) for
+                                   (i, name) in zip(xrange(pk_count), self._pk))
 
         return self.__pk_vals
 
@@ -593,15 +592,14 @@ class Model(object):
 
     @property
     def _footprint(self):
-        if not self.__footprint:
-            self.__footprint = dict(zip(self._pk, self._pk_vals))
-            self.__footprint['self'] = self
+        footprint = dict(zip(self._pk, self._pk_vals))
+        footprint['self'] = self
 
-        return self.__footprint  # make this immutable dict!!!
+        return footprint
 
     @property
     def _current_path(self):
-        if self._id is not None:
+        if all(self._pk_vals):
             return self._path.format(**self._footprint)
 
     @property
@@ -708,6 +706,12 @@ class Model(object):
     def __delattr__(self, item):
         raise PyrestoInvalidOperationException(
             "Del method on Pyresto models is not supported.")
+
+    def __str__(self):
+        return str(self._id)
+
+    def __unicode__(self):
+        return unicode(self._id)
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self._id == other._id
