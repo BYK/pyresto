@@ -555,8 +555,6 @@ class Model(object):
 
         self._set(**kwargs)
 
-        self._changed = set()
-
     def _set(self, **kwargs):
         self.__dict__.update(kwargs)
         cls = self.__class__
@@ -565,6 +563,8 @@ class Model(object):
         for item in overlaps:
             if issubclass(getattr(cls, item), Model):
                 self.__dict__['__' + item] = self.__dict__.pop(item)
+
+        self._changed = set()
 
     @property
     def _id(self):
