@@ -5,8 +5,12 @@ Tutorial
 
 .. module:: pyresto
 
-Welcome to the pyresto tutorial. This tutorial will guide you about how the
-:mod:`pyresto.apis.github` module is implemented.
+Welcome to the pyresto tutorial. This tutorial will guide you through
+the development of a REST interface for
+`the Github API <http://developer.github.com>`_. The
+implementation can be found in
+`the Pyresto source repository <https://github.com/BYK/pyresto>`_ in the
+:mod:`pyresto.apis.github` module.
 
 
 The Base
@@ -134,4 +138,3 @@ base class for our service since all other models inherit from that and will
 use the authentication defined on that, unless overridden. And we also set our
 default authentication mechanism to remove the burden from the shoulders of the
 users of our API library.
-
