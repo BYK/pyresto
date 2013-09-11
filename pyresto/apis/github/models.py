@@ -32,27 +32,27 @@ class GitHubModel(Model):
 
 
 class Comment(GitHubModel):
-    _path = '/repos/{user}/{repo}/comments/{id}'
-    _pk = ('user', 'repo', 'id')
+    _path = '/repos/{repo_name}/comments/{id}'
+    _pk = ('repo_name', 'id')
 
 
 class Commit(GitHubModel):
-    _path = '/repos/{user}/{repo}/commits/{sha}'
-    _pk = ('user', 'repo', 'sha')
+    _path = '/repos/{repo_name}/commits/{sha}'
+    _pk = ('repo_name', 'sha')
     comments = Many(Comment, '{self._current_path}/comments?per_page=100')
 
 
 class Branch(GitHubModel):
-    _path = '/repos/{user}/{repo}/branches/{name}'
-    _pk = ('user', 'repo', 'name')
+    _path = '/repos/{repo_name}/branches/{name}'
+    _pk = ('repo_name', 'name')
     commit = Foreign(Commit, embedded=True)
-    commits = Many(Commit, '/repos/{user}/{repo}/commits'
+    commits = Many(Commit, '/repos/{repo_name}/commits'
                            '?per_page=100&sha={self._id}', lazy=True)
 
 
 class Tag(GitHubModel):
-    _path = '/repos/{user}/{repo}/tags/{name}'
-    _pk = ('user', 'repo', 'name')
+    _path = '/repos/{repo_name}/tags/{name}'
+    _pk = ('repo_name', 'name')
     commit = Foreign(Commit, embedded=True)
 
 
@@ -62,10 +62,9 @@ class Key(GitHubModel):
 
 
 class Repo(GitHubModel):
-    _path = '/repos/{user}/{name}'
-    _pk = ('user', 'name')
-    commits = Many(Commit, '{self._current_path}/commits?per_page=100',
-                   lazy=True)
+    _path = '/repos/{full_name}'
+    _pk = 'full_name'
+    commits = Many(Commit, '{self._current_path}/commits?per_page=100', lazy=True)
     comments = Many(Comment, '{self._current_path}/comments?per_page=100')
     tags = Many(Tag, '{self._current_path}/tags?per_page=100')
     branches = Many(Branch, '{self._current_path}/branches?per_page=100')
