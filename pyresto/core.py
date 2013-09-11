@@ -405,8 +405,8 @@ class Foreign(Relation):
 
         if instance not in self.__cache:
             if self.__embedded:
-                self.__cache[instance] = self.__model(
-                    **getattr(instance, self.__key_property))
+                properties = getattr(instance, self.__key_property)
+                self.__cache[instance] = self.__model(**properties) if properties else None
                 self.__cache[instance]._auth = instance._auth
             else:
                 self.__cache[instance] = self.__model.get(
