@@ -467,7 +467,7 @@ class Model(object):
 
         link = response.links.get('next', None)
 
-        # Link is a dict sometimes, probably a Request bug
+        # Link is a dict sometimes, probably a Requests bug
         if link and isinstance(link, dict):
             return link.get('url')
 
