@@ -522,14 +522,8 @@ class Model(object):
 
         """
 
-        self.__dict__.update(kwargs)
+        self.__update_data(kwargs)
 
-        cls = self.__class__
-        overlaps = set(cls.__dict__) & set(kwargs)
-
-        for item in overlaps:
-            if issubclass(getattr(cls, item), Model):
-                self.__dict__['__' + item] = self.__dict__.pop(item)
 
     @property
     def _id(self):
@@ -633,21 +627,25 @@ class Model(object):
                                                  'Response code: {0:d}'
                                                  .format(response.status_code))
 
+    def __update_data(self, data):
+        cls = self.__class__
+        overlaps = set(cls.__dict__) & set(data)
+
+        for item in overlaps:
+            if issubclass(getattr(cls, item), Model):
+                self.__dict__['__' + item] = data.pop(item)
+
+        self.__dict__.update(data)
+
+
     def __fetch(self):
         data, next_url = self._rest_call(url=self._current_path,
                                          auth=self._auth)
 
         if data:
-            self.__dict__.update(data)
+            self.__update_data(data)
 
-            cls = self.__class__
-            overlaps = set(cls.__dict__) & set(data)
-
-            for item in overlaps:
-                if issubclass(getattr(cls, item), Model):
-                    self.__dict__['__' + item] = self.__dict__.pop(item)
-
-            self._fetched = True
+        self._fetched = True
 
     def __getattr__(self, name):
         if self._fetched:  # if we fetched and still don't have it, no luck!
