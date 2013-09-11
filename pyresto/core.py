@@ -465,7 +465,13 @@ class Model(object):
 
         """
 
-        return response.links.get('next', None)
+        link = response.links.get('next', None)
+
+        # Link is a dict sometimes, probably a Request bug
+        if link and isinstance(link, dict):
+            return link.get('url')
+
+        return link
 
     #: The class method which receives the class object and the body text of
     #: the server response to be parsed. It is expected to return a
