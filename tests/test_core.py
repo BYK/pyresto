@@ -7,7 +7,7 @@ except ImportError:
     import unittest
 
 from pyresto.core import (Model, WrappedList, LazyList, AuthList, enable_auth,
-                          Many, PyrestoInvalidAuthTypeException)
+                          Many, InvalidAuthTypeException)
 
 
 class MockModel(Model):
@@ -117,7 +117,7 @@ class Test_enable_auth(unittest.TestCase):
         self.auth('b', arg='bar')
         self.assertTrue(self.auth_list.b.called_once_with('bar'))
 
-        with self.assertRaises(PyrestoInvalidAuthTypeException):
+        with self.assertRaises(InvalidAuthTypeException):
             self.auth('c', arg='baz')
 
 
