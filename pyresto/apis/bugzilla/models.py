@@ -2,25 +2,12 @@
 
 from operator import itemgetter  # built-in
 
-from requests.auth import AuthBase  # third party
-
-from pyresto.core import Foreign, Many, Model, AuthList, enable_auth
-
-
-class QSAuth(AuthBase):
-    def __init__(self, username, password):
-        self.username = username
-        self.password = password
-
-    def __call__(self, req):
-        if not req.redirect:
-            req.params['username'] = self.username
-            req.params['password'] = self.password
-        return req
+from ...auth import UserQSAuth, AuthList, enable_auth
+from ...core import Foreign, Many, Model
 
 
 class BugzillaModel(Model):
-    _url_base = __service_url__
+    _url_base = __service_url__  # NOQA
 
     def __repr__(self):
         if hasattr(self, 'ref'):
@@ -100,7 +87,6 @@ class Bug(BugzillaModel):
 
         return cls
 
-
     assigned_to = Foreign(User, '__assigned_to', embedded=True)
     creator = Foreign(User, '__creator', embedded=True)
     qa_contact = Foreign(User, '__qa_contact', embedded=True)
@@ -123,7 +109,7 @@ Bug.init_many_fields({
 
 
 # define authentication methods
-auths = AuthList(querystring=QSAuth)
+auths = AuthList(querystring=UserQSAuth)
 
 # enable and publish global authentication
 auth = enable_auth(auths, BugzillaModel, 'querystring')

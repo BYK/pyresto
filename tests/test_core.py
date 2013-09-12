@@ -6,8 +6,7 @@ try:
 except ImportError:
     import unittest
 
-from pyresto.core import (Model, WrappedList, LazyList, AuthList, enable_auth,
-                          Many, InvalidAuthTypeException)
+from pyresto.core import Model, Many, WrappedList, LazyList
 
 
 class MockModel(Model):
@@ -90,35 +89,6 @@ class TestLazyList(unittest.TestCase):
         for i in xrange(2):  # run 2 times to test consecutive calls to iter
             for item, orig in zip(self.instance, self.list):
                 self.assertEqual(item.id, orig['id'])
-
-
-class TestAuthList(unittest.TestCase):
-    def setUp(self):
-        self.instance = AuthList(a=1, b=2)
-
-    def test_item_access(self):
-        self.assertEqual(self.instance['a'], 1)
-        self.assertEqual(self.instance['b'], 2)
-
-    def test_attribute_access(self):
-        self.assertEqual(self.instance.a, 1)
-        self.assertEqual(self.instance.b, 2)
-
-
-class Test_enable_auth(unittest.TestCase):
-    def setUp(self):
-        self.auth_list = AuthList(a=Mock(), b=Mock())
-        self.auth = enable_auth(self.auth_list, MockModel, 'a')
-
-    def test_auth(self):
-        self.auth(arg='foo')
-        self.assertTrue(self.auth_list.a.called_once_with('foo'))
-
-        self.auth('b', arg='bar')
-        self.assertTrue(self.auth_list.b.called_once_with('bar'))
-
-        with self.assertRaises(InvalidAuthTypeException):
-            self.auth('c', arg='baz')
 
 
 class TestManyLazy(unittest.TestCase):
