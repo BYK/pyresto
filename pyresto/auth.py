@@ -94,14 +94,14 @@ def enable_auth(supported_types, base_model, default_type):
               default authentication class if ``type`` is omitted.
     :rtype: ``function(type=default_type, **kwargs)``
     """
-    def auth(type=default_type, **kwargs):
-        if type is None:
+    def auth(auth_type=default_type, **kwargs):
+        if auth_type is None:
             base_model._auth = None
             return
 
         if type not in supported_types:
             raise InvalidAuthTypeException('Unsupported auth type: {0}'
-                                           .format(type))
+                                           .format(auth_type))
 
         base_model._auth = supported_types[type](**kwargs)
 
