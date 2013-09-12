@@ -99,10 +99,10 @@ def enable_auth(supported_types, base_model, default_type):
             base_model._auth = None
             return
 
-        if type not in supported_types:
+        if auth_type not in supported_types:
             raise InvalidAuthTypeException('Unsupported auth type: {0}'
                                            .format(auth_type))
 
-        base_model._auth = supported_types[type](**kwargs)
+        base_model._auth = supported_types[auth_type](**kwargs)
 
     return auth
