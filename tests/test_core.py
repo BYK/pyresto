@@ -6,8 +6,8 @@ try:
 except ImportError:
     import unittest
 
-from pyresto.core import (Model, WrappedList, LazyList, AuthList, enable_auth,
-                          Many, InvalidAuthTypeException)
+from pyresto.core import (Model, Many, WrappedList, LazyList)
+from pyresto.auth import (AuthList, enable_auth, InvalidAuthTypeException)
 
 
 class MockModel(Model):

@@ -1,20 +1,7 @@
 # coding: utf-8
 
-from requests.auth import AuthBase, HTTPBasicAuth  # third party
-
-from ...core import Foreign, Many, Model, AuthList, enable_auth
-
-
-class AppQSAuth(AuthBase):
-    def __init__(self, client_id, client_secret):
-        self.client_id = client_id
-        self.client_secret = client_secret
-
-    def __call__(self, req):
-        if not req.redirect:
-            req.params['client_id'] = self.client_id
-            req.params['client_secret'] = self.client_secret
-        return req
+from ...auth import HTTPBasicAuth, AppQSAuth, AuthList, enable_auth
+from ...core import Foreign, Many, Model
 
 
 class GitHubModel(Model):
