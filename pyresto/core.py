@@ -10,11 +10,8 @@ classes.
 """
 
 import collections
+import json
 import logging
-try:
-    import json
-except ImportError:
-    import simplejson as json
 import re
 import urlparse
 
