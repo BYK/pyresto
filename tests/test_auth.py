@@ -27,7 +27,7 @@ class TestAuthList(unittest.TestCase):
         self.assertEqual(self.instance.b, 2)
 
 
-class Test_enable_auth(unittest.TestCase):
+class TestEnableAuth(unittest.TestCase):
     def setUp(self):
         self.auth_list = AuthList(a=Mock(), b=Mock())
         self.auth = enable_auth(self.auth_list, MockModel, 'a')
